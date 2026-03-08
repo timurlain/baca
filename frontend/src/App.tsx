@@ -1,35 +1,31 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function Placeholder({ name }: { name: string }) {
+  return <div className="p-8 text-center text-gray-600">Stránka: {name} — Zatím neimplementováno</div>
 }
 
-export default App
+function ResponsiveHome() {
+  const isMobile = window.innerWidth < 768
+  return isMobile
+    ? <Placeholder name="Můj fokus" />
+    : <Placeholder name="Dashboard" />
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Placeholder name="Přihlášení" />} />
+        <Route path="/" element={<ResponsiveHome />} />
+        <Route path="/dashboard" element={<Placeholder name="Dashboard" />} />
+        <Route path="/board" element={<Placeholder name="Kanban Board" />} />
+        <Route path="/board/user" element={<Placeholder name="Board — Per User" />} />
+        <Route path="/voice" element={<Placeholder name="Hlasový vstup" />} />
+        <Route path="/admin/users" element={<Placeholder name="Správa uživatelů" />} />
+        <Route path="/admin/categories" element={<Placeholder name="Správa kategorií" />} />
+        <Route path="/admin/settings" element={<Placeholder name="Nastavení" />} />
+        <Route path="/guide" element={<Placeholder name="Příručka" />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
