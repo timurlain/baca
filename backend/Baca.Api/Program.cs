@@ -29,9 +29,10 @@ builder.Services.AddCors(options =>
 });
 
 // Services — placeholder implementations (agents will replace)
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IAuthService, NotImplementedAuthService>();
 builder.Services.AddScoped<IEmailService, NotImplementedEmailService>();
-builder.Services.AddScoped<IDashboardService, NotImplementedDashboardService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IVoiceTranscriptionService, NotImplementedVoiceTranscriptionService>();
 builder.Services.AddScoped<IVoiceParsingService, NotImplementedVoiceParsingService>();
 builder.Services.AddScoped<IWhatsAppNotificationService, NotImplementedWhatsAppNotificationService>();
