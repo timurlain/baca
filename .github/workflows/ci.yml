@@ -125,7 +125,7 @@ jobs:
         working-directory: frontend
 
       - name: Start backend
-        run: dotnet run --project Baca.Api --no-build &
+        run: dotnet run --project Baca.Api --no-build --no-launch-profile &
         working-directory: backend
         env:
           ASPNETCORE_URLS: http://localhost:5000
@@ -135,9 +135,15 @@ jobs:
       - name: Wait for backend
         run: |
           for i in $(seq 1 30); do
-            curl -sf http://localhost:5000/api/health && break
+            if curl -sf http://localhost:5000/api/health; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            echo "Waiting for backend... ($i/30)"
             sleep 2
           done
+          echo "Backend failed to start"
+          exit 1
 
       - name: Run E2E tests
         run: npm run test:e2e
