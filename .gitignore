@@ -45,6 +45,11 @@ test-results/
 # Docker
 docker-compose.override.yml
 
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
 # Secrets
 **/appsettings.Development.json
 **/appsettings.Local.json
