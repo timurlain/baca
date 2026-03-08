@@ -24,6 +24,9 @@ public static class DashboardEndpoints
 
 internal static class EndpointIdentity
 {
+    private const string TestRoleHeader = "X-Test-Role";
+    private const string TestUserIdHeader = "X-Test-User-Id";
+
     public static UserRole GetCurrentRole(HttpContext httpContext)
     {
         if (httpContext.Items.TryGetValue("Role", out var roleValue))
@@ -48,6 +51,13 @@ internal static class EndpointIdentity
             };
         }
 
+        if (IsTestingEnvironment(httpContext)
+            && httpContext.Request.Headers.TryGetValue(TestRoleHeader, out var roleHeader)
+            && Enum.TryParse<UserRole>(roleHeader.ToString(), true, out var testRole))
+        {
+            return testRole;
+        }
+
         return UserRole.Guest;
     }
 
@@ -55,7 +65,7 @@ internal static class EndpointIdentity
     {
         if (!httpContext.Items.TryGetValue("User", out var userValue))
         {
-            return null;
+            return GetCurrentUserIdFromTestingHeader(httpContext);
         }
 
         return userValue switch
@@ -76,5 +86,20 @@ internal static class EndpointIdentity
     {
         var role = GetCurrentRole(httpContext);
         return role is UserRole.Admin or UserRole.User;
+    }
+
+    private static bool IsTestingEnvironment(HttpContext httpContext)
+    {
+        var environment = httpContext.RequestServices.GetService<IHostEnvironment>();
+        return environment?.IsEnvironment("Testing") == true;
+    }
+
+    private static int? GetCurrentUserIdFromTestingHeader(HttpContext httpContext)
+    {
+        return IsTestingEnvironment(httpContext)
+            && httpContext.Request.Headers.TryGetValue(TestUserIdHeader, out var userHeader)
+            && int.TryParse(userHeader.ToString(), out var userId)
+                ? userId
+                : null;
     }
 }
