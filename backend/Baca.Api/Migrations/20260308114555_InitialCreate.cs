@@ -109,7 +109,7 @@ namespace Baca.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tasks",
+                name: "TaskItems",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -129,27 +129,27 @@ namespace Baca.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.PrimaryKey("PK_TaskItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tasks_Categories_CategoryId",
+                        name: "FK_TaskItems_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Tasks_Tasks_ParentTaskId",
+                        name: "FK_TaskItems_TaskItems_ParentTaskId",
                         column: x => x.ParentTaskId,
-                        principalTable: "Tasks",
+                        principalTable: "TaskItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Tasks_Users_AssigneeId",
+                        name: "FK_TaskItems_Users_AssigneeId",
                         column: x => x.AssigneeId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Tasks_Users_CreatedById",
+                        name: "FK_TaskItems_Users_CreatedById",
                         column: x => x.CreatedById,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -171,9 +171,9 @@ namespace Baca.Api.Migrations
                 {
                     table.PrimaryKey("PK_Comments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Comments_Tasks_TaskId",
+                        name: "FK_Comments_TaskItems_TaskId",
                         column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        principalTable: "TaskItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -183,11 +183,6 @@ namespace Baca.Api.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.InsertData(
-                table: "AppSettings",
-                columns: new[] { "Id", "AppName", "GuestPin" },
-                values: new object[] { 1, "Bača", "" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Categories_Name",
@@ -223,28 +218,28 @@ namespace Baca.Api.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_AssigneeId",
-                table: "Tasks",
+                name: "IX_TaskItems_AssigneeId",
+                table: "TaskItems",
                 column: "AssigneeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_CategoryId",
-                table: "Tasks",
+                name: "IX_TaskItems_CategoryId",
+                table: "TaskItems",
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_CreatedById",
-                table: "Tasks",
+                name: "IX_TaskItems_CreatedById",
+                table: "TaskItems",
                 column: "CreatedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_ParentTaskId",
-                table: "Tasks",
+                name: "IX_TaskItems_ParentTaskId",
+                table: "TaskItems",
                 column: "ParentTaskId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_Status",
-                table: "Tasks",
+                name: "IX_TaskItems_Status",
+                table: "TaskItems",
                 column: "Status");
 
             migrationBuilder.CreateIndex(
@@ -273,7 +268,7 @@ namespace Baca.Api.Migrations
                 name: "LoginTokens");
 
             migrationBuilder.DropTable(
-                name: "Tasks");
+                name: "TaskItems");
 
             migrationBuilder.DropTable(
                 name: "Categories");

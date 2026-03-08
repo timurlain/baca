@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Baca.Api.Migrations
 {
     [DbContext(typeof(BacaDbContext))]
-    [Migration("20260308110631_InitialCreate")]
+    [Migration("20260308114555_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -46,14 +46,6 @@ namespace Baca.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AppSettings");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AppName = "Bača",
-                            GuestPin = ""
-                        });
                 });
 
             modelBuilder.Entity("Baca.Api.Models.Category", b =>
@@ -249,7 +241,7 @@ namespace Baca.Api.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("TaskItems");
                 });
 
             modelBuilder.Entity("Baca.Api.Models.User", b =>
