@@ -236,6 +236,7 @@ Name            : string (required, max 100)
 Email           : string (nullable — null pro guest sessions)
 Phone           : string (nullable, formát +420xxx, pro WhatsApp notifikace)
 Role            : enum { Admin, User, Guest }
+GameRoleId      : int (FK → GameRole, nullable)
 AvatarColor     : string (hex barva pro avatar, generuje se při vytvoření)
 CreatedAt       : DateTime
 IsActive        : bool (soft delete)
@@ -250,6 +251,18 @@ ExpiresAt       : DateTime
 IsUsed          : bool
 CreatedAt       : DateTime
 ```
+
+### GameRole
+```
+Id              : int (PK)
+Name            : string (required, max 50, unique) — herní role na LARPu
+Description     : string (nullable, max 200) — popis role
+Color           : string (hex barva, max 7, default "#3B82F6")
+SortOrder       : int
+CreatedAt       : DateTime
+```
+
+> **Poznámka:** GameRole je herní role (Osud, Vládce, Příšera…) — oddělená od UserRole (Admin/User/Guest), která řídí přístupová práva. Každý uživatel může mít max 1 GameRole (nullable). Admin spravuje GameRoles podobně jako Category.
 
 ### Category
 ```
@@ -429,9 +442,9 @@ Dedikovaná stránka pro rychlé vytváření úkolů hlasem. Optimalizovaná pr
 - Skryté pro Guest roli.
 
 ### 8. Admin — Správa uživatelů (`/admin/users`)
-- Tabulka uživatelů: jméno, email, telefon, role, stav (aktivní/neaktivní).
-- **Přidat uživatele**: jméno + email + telefon (volitelný, +420...) + role (Admin/User).
-- **Editace**: změna role, telefonu, deaktivace.
+- Tabulka uživatelů: jméno, email, telefon, role, herní role, stav (aktivní/neaktivní).
+- **Přidat uživatele**: jméno + email + telefon (volitelný, +420...) + role (Admin/User) + herní role (volitelná).
+- **Editace**: změna role, herní role, telefonu, deaktivace.
 - **Znovu odeslat magic link** — tlačítko u každého uživatele.
 - Nelze smazat uživatele s přiřazenými úkoly (jen deaktivovat).
 
@@ -441,11 +454,17 @@ Dedikovaná stránka pro rychlé vytváření úkolů hlasem. Optimalizovaná pr
 - Drag-and-drop řazení kategorií.
 - Nelze smazat kategorii s přiřazenými úkoly (nutné nejprve přesunout).
 
-### 10. Admin — Nastavení (`/admin/settings`)
+### 10. Admin — Správa herních rolí (`/admin/gameroles`)
+- Seznam herních rolí s barvou, popisem a pořadím.
+- Přidat / editovat / smazat herní roli.
+- Drag-and-drop řazení rolí.
+- Nelze smazat roli s přiřazenými uživateli (nutné nejprve odebrat).
+
+### 11. Admin — Nastavení (`/admin/settings`)
 - Změna guest PINu.
 - Název aplikace (default "Bača").
 
-### 11. Uživatelská příručka (`/guide`)
+### 12. Uživatelská příručka (`/guide`)
 - **Welcome page**: max 1/2 A4 (200 slov). Co je Bača, 3 kroky "jak začít", odkazy na témata.
 - **Téma stránky** (drill-down, max 1 A4 každá): Board, Fokus, Hlasový vstup, Správa (admin only), Offline.
 - Přístupné přes "?" tlačítko v headeru (desktop) a tab baru (mobil).
@@ -496,11 +515,19 @@ PUT    /api/categories/{id}        { name, color, sortOrder }
 DELETE /api/categories/{id}                                  → jen pokud nemá úkoly
 ```
 
+### Game Roles (Admin only)
+```
+GET    /api/gameroles                                       → seznam
+POST   /api/gameroles              { name, description, color }
+PUT    /api/gameroles/{id}         { name, description, color, sortOrder }
+DELETE /api/gameroles/{id}                                   → jen pokud nemá přiřazené uživatele
+```
+
 ### Users (Admin only)
 ```
 GET    /api/users                                           → seznam
-POST   /api/users                  { name, email, phone, role } → vytvoří + pošle magic link
-PUT    /api/users/{id}             { name, phone, role, isActive }
+POST   /api/users                  { name, email, phone, role, gameRoleId } → vytvoří + pošle magic link
+PUT    /api/users/{id}             { name, phone, role, gameRoleId, isActive }
 POST   /api/users/{id}/resend-link                          → znovu pošle magic link
 ```
 
@@ -560,6 +587,7 @@ GET    /api/health                                          → { status: "healt
 | `POST /api/tasks/*/comments` | ❌ | ✅ | ✅ |
 | `POST /api/voice/*` | ❌ | ✅ | ✅ |
 | `/api/categories` (write) | ❌ | ❌ | ✅ |
+| `/api/gameroles` (write) | ❌ | ❌ | ✅ |
 | `/api/users/*` | ❌ | ❌ | ✅ |
 | `/api/settings` (write) | ❌ | ❌ | ✅ |
 
@@ -603,6 +631,7 @@ baca/
 │   │   │   ├── Task.cs
 │   │   │   ├── Comment.cs
 │   │   │   ├── Category.cs
+│   │   │   ├── GameRole.cs
 │   │   │   ├── LoginToken.cs
 │   │   │   └── AppSettings.cs
 │   │   │
@@ -611,6 +640,7 @@ baca/
 │   │   │   ├── TaskEndpoints.cs
 │   │   │   ├── CommentEndpoints.cs
 │   │   │   ├── CategoryEndpoints.cs
+│   │   │   ├── GameRoleEndpoints.cs
 │   │   │   ├── UserEndpoints.cs
 │   │   │   ├── DashboardEndpoints.cs
 │   │   │   ├── FocusEndpoints.cs
@@ -702,6 +732,7 @@ baca/
 │       │   ├── admin/
 │       │   │   ├── UserManagement.tsx
 │       │   │   ├── CategoryManagement.tsx
+│       │   │   ├── GameRoleManagement.tsx
 │       │   │   └── Settings.tsx
 │       │   │
 │       │   ├── auth/
@@ -752,7 +783,8 @@ Při prvním spuštění (prázdná DB) automaticky vytvořit (EF Core migration
 
 1. **Admin uživatel**: Tomáš (tvůj email + telefon) s rolí Admin.
 2. **Výchozí kategorie**: Hra, Logistika, Jídlo, Rekvizity, Komunikace (s barvami).
-3. **Guest PIN**: `ovcina2026` (konfigurovatelné přes env var).
+3. **Výchozí herní role**: Osud (#7DD3FC), Vládce (#8B5CF6), Obchodník (#D4A017), Příručí (#3B82F6), CP (#EC4899), Knihovnice (#1E3A5F), Příšera (#991B1B), Hraničář (#84CC16), Technická pomoc (#6B7280), Fotograf (#A855F7).
+4. **Guest PIN**: `ovcina2026` (konfigurovatelné přes env var, hashované BCrypt).
 
 ---
 
@@ -1456,10 +1488,11 @@ Read the full specification from: baca-project-spec.md (attached or in working d
    - `backend/Baca.Api.IntegrationTests/Baca.Api.IntegrationTests.csproj` (xUnit, Microsoft.AspNetCore.Mvc.Testing, Testcontainers.PostgreSql, FluentAssertions)
 
 2. EF Core models — ALL of them, fully defined with data annotations and relationships:
-   - `Models/User.cs` (with Role enum)
+   - `Models/User.cs` (with Role enum + nullable GameRoleId FK)
    - `Models/TaskItem.cs` (avoid naming collision with System.Threading.Tasks.Task — use TaskItem or BacaTask)
    - `Models/Comment.cs`
    - `Models/Category.cs`
+   - `Models/GameRole.cs` (herní role — Name, Description, Color, SortOrder)
    - `Models/LoginToken.cs`
    - `Models/AppSettings.cs`
    - `Models/Enums.cs` (TaskStatus, Priority, UserRole)
@@ -1474,6 +1507,7 @@ Read the full specification from: baca-project-spec.md (attached or in working d
    - `StatusChangeRequest.cs`, `SortChangeRequest.cs`
    - `CommentDto.cs`, `CreateCommentRequest.cs`
    - `CategoryDto.cs`, `CreateCategoryRequest.cs`, `UpdateCategoryRequest.cs`
+   - `GameRoleDto.cs`, `CreateGameRoleRequest.cs`, `UpdateGameRoleRequest.cs`
    - `UserDto.cs`, `CreateUserRequest.cs`, `UpdateUserRequest.cs`
    - `LoginRequest.cs`, `GuestLoginRequest.cs`, `AuthResponse.cs`
    - `VoiceParseResponse.cs` (with confidence fields)
@@ -1487,6 +1521,7 @@ Read the full specification from: baca-project-spec.md (attached or in working d
    - `Endpoints/TaskEndpoints.cs`
    - `Endpoints/CommentEndpoints.cs`
    - `Endpoints/CategoryEndpoints.cs`
+   - `Endpoints/GameRoleEndpoints.cs`
    - `Endpoints/UserEndpoints.cs`
    - `Endpoints/DashboardEndpoints.cs`
    - `Endpoints/FocusEndpoints.cs`
@@ -1511,7 +1546,7 @@ Read the full specification from: baca-project-spec.md (attached or in working d
    - Map all endpoint groups
    - Health check endpoint
    - Read configuration from environment variables
-   - Seed data logic (admin user, default categories, guest PIN) — run on startup if DB is empty
+      - Seed data logic (admin user, default categories, default game roles, guest PIN) — run on startup if DB is empty
 
 9. `Middleware/AuthMiddleware.cs` — stub that just calls next() (Agent A will implement).
 
@@ -1528,6 +1563,7 @@ Read the full specification from: baca-project-spec.md (attached or in working d
    - TaskItem, TaskDetail, CreateTaskRequest, UpdateTaskRequest
    - Comment, CreateCommentRequest
    - Category, CreateCategoryRequest, UpdateCategoryRequest
+   - GameRole, CreateGameRoleRequest, UpdateGameRoleRequest
    - User, CreateUserRequest, UpdateUserRequest
    - VoiceParseResponse (with confidence fields)
    - DashboardData
@@ -1543,7 +1579,7 @@ Read the full specification from: baca-project-spec.md (attached or in working d
    - Typed endpoint functions for EVERY API endpoint from spec
 
 4. `src/App.tsx` with React Router:
-   - All routes from spec: `/login`, `/`, `/dashboard`, `/board`, `/board/user`, `/voice`, `/admin/users`, `/admin/categories`, `/admin/settings`
+   - All routes from spec: `/login`, `/`, `/dashboard`, `/board`, `/board/user`, `/voice`, `/admin/users`, `/admin/categories`, `/admin/gameroles`, `/admin/settings`
    - Auth guard (redirect to /login if not authenticated)
    - Responsive routing: mobile (< 768px) → `/` renders FocusPage, desktop → `/` renders Dashboard
    - All pages rendering placeholder `<div>Page: {name} — Not implemented yet</div>`
@@ -1632,7 +1668,7 @@ Read the full specification from: baca-project-spec.md
 - `Program.cs` — only to register YOUR services with real implementations (replace NotImplementedException registrations). Do NOT change the structure or other service registrations.
 
 ## DO NOT TOUCH:
-- Any file in `Endpoints/` other than Auth, Task, Comment, Focus
+- Any file in `Endpoints/` other than Auth, Task, Comment, Focus (GameRole belongs to Agent B)
 - Any service file other than AuthService, EmailService
 - Any frontend file
 - Models, DTOs, DbContext (these are frozen contracts from Phase 0)
@@ -1767,6 +1803,7 @@ Read the full specification from: baca-project-spec.md
 - `Endpoints/VoiceEndpoints.cs`
 - `Endpoints/DashboardEndpoints.cs`
 - `Endpoints/CategoryEndpoints.cs`
+- `Endpoints/GameRoleEndpoints.cs`
 - `Endpoints/UserEndpoints.cs`
 - `Endpoints/SettingsEndpoints.cs`
 - `Services/VoiceTranscriptionService.cs` (implement IVoiceTranscriptionService)
@@ -1780,6 +1817,7 @@ Read the full specification from: baca-project-spec.md
 - `Baca.Api.Tests/Services/DashboardServiceTests.cs`
 - `Baca.Api.IntegrationTests/VoiceEndpointTests.cs`
 - `Baca.Api.IntegrationTests/CategoryCrudTests.cs`
+- `Baca.Api.IntegrationTests/GameRoleCrudTests.cs`
 - `Baca.Api.IntegrationTests/UserManagementTests.cs`
 - `Baca.Api.IntegrationTests/DashboardEndpointTests.cs`
 
@@ -1828,7 +1866,8 @@ Read the full specification from: baca-project-spec.md
 
 ### Admin endpoints:
 - Categories: CRUD, prevent delete if tasks exist, validate unique name
-- Users: CRUD, add phone field, prevent delete if tasks assigned (only deactivate), resend magic link (call IEmailService — Agent A implements it, just call the interface)
+- Game Roles: CRUD, prevent delete if users assigned, validate unique name. Same pattern as Category.
+- Users: CRUD, add phone + gameRoleId fields, prevent delete if tasks assigned (only deactivate), resend magic link (call IEmailService — Agent A implements it, just call the interface)
 - Settings: get/update guest PIN (hash with BCrypt) and app name
 
 ## Testing requirements:
@@ -1868,6 +1907,13 @@ Read the full specification from: baca-project-spec.md
   - UpdateCategory → name + color changed
   - DeleteCategory_Empty → 200, deleted
   - DeleteCategory_HasTasks → 409 Conflict
+  - DuplicateName → 409 Conflict
+
+- `GameRoleCrudTests`:
+  - CreateGameRole → 201, in DB
+  - UpdateGameRole → name + color + description changed
+  - DeleteGameRole_NoUsers → 200, deleted
+  - DeleteGameRole_HasUsers → 409 Conflict
   - DuplicateName → 409 Conflict
 
 - `UserManagementTests`:
@@ -2137,6 +2183,7 @@ Read the full specification from: baca-project-spec.md
 - `src/components/dashboard/ProgressChart.tsx`
 - `src/components/admin/UserManagement.tsx`
 - `src/components/admin/CategoryManagement.tsx`
+- `src/components/admin/GameRoleManagement.tsx`
 - `src/components/admin/Settings.tsx`
 - `src/hooks/useVoiceRecorder.ts`
 - `src/hooks/useOnlineStatus.ts`
@@ -2150,6 +2197,7 @@ Read the full specification from: baca-project-spec.md
 - `src/components/voice/VoiceTaskPreview.test.tsx`
 - `src/components/dashboard/Dashboard.test.tsx`
 - `src/components/admin/UserManagement.test.tsx`
+- `src/components/admin/GameRoleManagement.test.tsx`
 - `src/hooks/useVoiceRecorder.test.ts`
 - `src/hooks/useOnlineStatus.test.ts`
 
@@ -2236,6 +2284,14 @@ Read the full specification from: baca-project-spec.md
 - Edit: change name, color
 - Delete: only if no tasks (show error if tasks exist)
 - Drag-and-drop reorder (use @dnd-kit)
+
+### Admin — Game Role Management:
+- List with color swatch, name, and description
+- "Přidat herní roli" → form (name, description, color picker)
+- Edit: change name, description, color
+- Delete: only if no users assigned (show error if users exist)
+- Drag-and-drop reorder (use @dnd-kit)
+- Same UI pattern as Category Management
 
 ### Admin — Settings:
 - Change guest PIN (input + save button)
