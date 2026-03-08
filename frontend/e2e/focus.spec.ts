@@ -4,10 +4,17 @@ test.use({ viewport: { width: 375, height: 812 } });
 
 async function loginAsAdmin(page: Page) {
   await page.goto('/login');
-  await page.waitForLoadState('networkidle');
-  await page.evaluate(() =>
-    fetch('/api/test/login/admin@baca.local', { method: 'POST', credentials: 'include' })
-  );
+  await page.waitForLoadState('domcontentloaded');
+  const status = await page.evaluate(async () => {
+    const resp = await fetch('/api/test/login/admin@baca.local', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return { status: resp.status, text: await resp.text() };
+  });
+  if (status.status !== 200) {
+    throw new Error(`Admin login failed: ${status.status} - ${status.text}`);
+  }
 }
 
 async function createAndAssignTask(page: Page, title: string, priority = 'High') {

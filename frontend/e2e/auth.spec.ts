@@ -2,23 +2,34 @@ import { test, expect, type Page } from '@playwright/test';
 
 async function loginAsAdmin(page: Page) {
   await page.goto('/login');
-  await page.waitForLoadState('networkidle');
-  await page.evaluate(() =>
-    fetch('/api/test/login/admin@baca.local', { method: 'POST', credentials: 'include' })
-  );
+  await page.waitForLoadState('domcontentloaded');
+  const status = await page.evaluate(async () => {
+    const resp = await fetch('/api/test/login/admin@baca.local', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return { status: resp.status, text: await resp.text() };
+  });
+  if (status.status !== 200) {
+    throw new Error(`Admin login failed: ${status.status} - ${status.text}`);
+  }
 }
 
 async function loginAsGuest(page: Page) {
   await page.goto('/login');
-  await page.waitForLoadState('networkidle');
-  await page.evaluate(() =>
-    fetch('/api/auth/guest', {
+  await page.waitForLoadState('domcontentloaded');
+  const status = await page.evaluate(async () => {
+    const resp = await fetch('/api/auth/guest', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin: 'ovcina2026' }),
-    })
-  );
+    });
+    return { status: resp.status, text: await resp.text() };
+  });
+  if (status.status !== 200) {
+    throw new Error(`Guest login failed: ${status.status} - ${status.text}`);
+  }
 }
 
 test.describe('Authentication', () => {
@@ -30,7 +41,7 @@ test.describe('Authentication', () => {
 
   test('login page shows guest PIN section when Host tab is clicked', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'Host' }).click();
     await expect(page.getByLabel('PIN hosta')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Vstoupit')).toBeVisible();
@@ -38,10 +49,9 @@ test.describe('Authentication', () => {
 
   test('email login shows feedback after submission', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByLabel('E-mail').fill('admin@baca.local');
     await page.getByRole('button', { name: 'Poslat odkaz' }).click();
-    // Either success or error message appears after submission
     await expect(
       page.getByText(/odkaz|odeslán|nepodařilo/i)
     ).toBeVisible({ timeout: 10000 });
