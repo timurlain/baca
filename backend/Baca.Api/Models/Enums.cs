@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace Baca.Api.Models;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum UserRole
 {
     Admin,
@@ -7,6 +10,7 @@ public enum UserRole
     Guest
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TaskItemStatus
 {
     Idea,
@@ -16,6 +20,7 @@ public enum TaskItemStatus
     Done
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum Priority
 {
     Low,

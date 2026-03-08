@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Baca.Api.Data;
 using Baca.Api.DTOs;
 using Baca.Api.Endpoints;
@@ -8,12 +7,6 @@ using Baca.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// JSON serialization — accept string enum values from frontend
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("Default")
