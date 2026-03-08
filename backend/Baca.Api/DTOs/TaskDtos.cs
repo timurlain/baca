@@ -2,94 +2,101 @@ using Baca.Api.Models;
 
 namespace Baca.Api.DTOs;
 
-public record TaskDto(
-    int Id,
-    string Title,
-    string? Description,
-    TaskItemStatus Status,
-    Priority Priority,
-    int? CategoryId,
-    string? CategoryName,
-    string? CategoryColor,
-    int? AssigneeId,
-    string? AssigneeName,
-    string? AssigneeAvatarColor,
-    int? ParentTaskId,
-    DateTime? DueDate,
-    int SortOrder,
-    int CreatedById,
-    string CreatedByName,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
-    int SubTaskCount,
-    int SubTaskDoneCount,
-    int CommentCount
-);
+public class TaskDto
+{
+    public int Id { get; set; }
+    public required string Title { get; set; }
+    public string? Description { get; set; }
+    public required TaskItemStatus Status { get; set; }
+    public required Priority Priority { get; set; }
+    public int? CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public string? CategoryColor { get; set; }
+    public int? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
+    public string? AssigneeAvatarColor { get; set; }
+    public int? ParentTaskId { get; set; }
+    public DateTime? DueDate { get; set; }
+    public int SortOrder { get; set; }
+    public int CreatedById { get; set; }
+    public required string CreatedByName { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public int SubTaskCount { get; set; }
+    public int SubTaskDoneCount { get; set; }
+    public int CommentCount { get; set; }
+}
 
-public record TaskDetailDto(
-    int Id,
-    string Title,
-    string? Description,
-    TaskItemStatus Status,
-    Priority Priority,
-    int? CategoryId,
-    string? CategoryName,
-    string? CategoryColor,
-    int? AssigneeId,
-    string? AssigneeName,
-    string? AssigneeAvatarColor,
-    int? ParentTaskId,
-    string? ParentTaskTitle,
-    DateTime? DueDate,
-    int SortOrder,
-    int CreatedById,
-    string CreatedByName,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
-    List<TaskDto> SubTasks,
-    List<CommentDto> Comments
-);
+public class TaskDetailDto
+{
+    public int Id { get; set; }
+    public required string Title { get; set; }
+    public string? Description { get; set; }
+    public required TaskItemStatus Status { get; set; }
+    public required Priority Priority { get; set; }
+    public int? CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public string? CategoryColor { get; set; }
+    public int? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
+    public string? AssigneeAvatarColor { get; set; }
+    public int? ParentTaskId { get; set; }
+    public string? ParentTaskTitle { get; set; }
+    public DateTime? DueDate { get; set; }
+    public int SortOrder { get; set; }
+    public int CreatedById { get; set; }
+    public required string CreatedByName { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public List<TaskDto> SubTasks { get; set; } = [];
+    public List<CommentDto> Comments { get; set; } = [];
+}
 
-public record CreateTaskRequest(
-    string Title,
-    string? Description,
-    TaskItemStatus? Status,
-    Priority? Priority,
-    int? CategoryId,
-    int? AssigneeId,
-    int? ParentTaskId,
-    DateTime? DueDate
-);
+public class CreateTaskRequest
+{
+    public required string Title { get; set; }
+    public string? Description { get; set; }
+    public TaskItemStatus? Status { get; set; }
+    public Priority? Priority { get; set; }
+    public int? CategoryId { get; set; }
+    public int? AssigneeId { get; set; }
+    public int? ParentTaskId { get; set; }
+    public DateTime? DueDate { get; set; }
+}
 
-public record UpdateTaskRequest(
-    string? Title,
-    string? Description,
-    TaskItemStatus? Status,
-    Priority? Priority,
-    int? CategoryId,
-    int? AssigneeId,
-    int? ParentTaskId,
-    DateTime? DueDate
-);
+public class UpdateTaskRequest
+{
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public TaskItemStatus? Status { get; set; }
+    public Priority? Priority { get; set; }
+    public int? CategoryId { get; set; }
+    public int? AssigneeId { get; set; }
+    public int? ParentTaskId { get; set; }
+    public DateTime? DueDate { get; set; }
+}
 
-public record StatusChangeRequest(
-    TaskItemStatus Status,
-    int? SortOrder
-);
+public class StatusChangeRequest
+{
+    public required TaskItemStatus Status { get; set; }
+    public int? SortOrder { get; set; }
+}
 
-public record SortChangeRequest(
-    int SortOrder
-);
+public class SortChangeRequest
+{
+    public int SortOrder { get; set; }
+}
 
-public record FocusTaskDto(
-    int Id,
-    string Title,
-    TaskItemStatus Status,
-    Priority Priority,
-    int? CategoryId,
-    string? CategoryName,
-    string? CategoryColor,
-    DateTime? DueDate,
-    int SubTaskCount,
-    int SubTaskDoneCount
-);
+public class FocusTaskDto
+{
+    public int Id { get; set; }
+    public required string Title { get; set; }
+    public required TaskItemStatus Status { get; set; }
+    public required Priority Priority { get; set; }
+    public int? CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public string? CategoryColor { get; set; }
+    public DateTime? DueDate { get; set; }
+    public int SubTaskCount { get; set; }
+    public int SubTaskDoneCount { get; set; }
+}

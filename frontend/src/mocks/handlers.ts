@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import type {
   TaskItem,
   Category,
+  GameRole,
   User,
   AuthResponse,
   DashboardData,
@@ -11,6 +12,12 @@ import type {
 } from '@/types'
 import { TaskStatus, Priority, UserRole } from '@/types'
 
+const mockGameRoles: GameRole[] = [
+  { id: 1, name: 'Osud', description: 'Game Master', color: '#7DD3FC', sortOrder: 1, createdAt: '2026-01-01T00:00:00Z' },
+  { id: 2, name: 'Vládce', description: 'Nation Ruler', color: '#8B5CF6', sortOrder: 2, createdAt: '2026-01-01T00:00:00Z' },
+  { id: 3, name: 'Obchodník', description: 'Merchant', color: '#D4A017', sortOrder: 3, createdAt: '2026-01-01T00:00:00Z' },
+]
+
 const mockUsers: User[] = [
   {
     id: 1,
@@ -18,6 +25,8 @@ const mockUsers: User[] = [
     email: 'tomas@baca.local',
     phone: null,
     role: UserRole.Admin,
+    gameRoleId: 1,
+    gameRoleName: 'Osud',
     avatarColor: '#10B981',
     isActive: true,
     createdAt: '2026-01-01T00:00:00Z',
@@ -28,6 +37,8 @@ const mockUsers: User[] = [
     email: 'jana@baca.local',
     phone: '+420123456789',
     role: UserRole.User,
+    gameRoleId: null,
+    gameRoleName: null,
     avatarColor: '#3B82F6',
     isActive: true,
     createdAt: '2026-01-02T00:00:00Z',
@@ -127,6 +138,12 @@ export const handlers = [
       createdAt: new Date().toISOString(),
     }, { status: 201 }),
   ),
+
+  // Game Roles
+  http.get('/api/gameroles', () => HttpResponse.json(mockGameRoles)),
+  http.post('/api/gameroles', () => HttpResponse.json(mockGameRoles[0], { status: 201 })),
+  http.put('/api/gameroles/:id', () => HttpResponse.json(mockGameRoles[0])),
+  http.delete('/api/gameroles/:id', () => new HttpResponse(null, { status: 204 })),
 
   // Categories
   http.get('/api/categories', () => HttpResponse.json(mockCategories)),

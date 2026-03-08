@@ -1,6 +1,7 @@
 namespace Baca.Api.DTOs;
 
-public record HealthResponse(
-    string Status,
-    string Db
-);
+public class HealthResponse
+{
+    public required string Status { get; set; }
+    public required string Db { get; set; }
+}

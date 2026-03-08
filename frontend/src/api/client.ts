@@ -10,6 +10,9 @@ import type {
   Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
+  GameRole,
+  CreateGameRoleRequest,
+  UpdateGameRoleRequest,
   User,
   CreateUserRequest,
   UpdateUserRequest,
@@ -162,6 +165,18 @@ export const categories = {
     put<Category>(`/api/categories/${id}`, data),
   delete: (id: number) =>
     del(`/api/categories/${id}`),
+};
+
+// Game Roles
+export const gameRoles = {
+  list: () =>
+    get<GameRole[]>('/api/gameroles'),
+  create: (data: CreateGameRoleRequest) =>
+    post<GameRole>('/api/gameroles', data),
+  update: (id: number, data: UpdateGameRoleRequest) =>
+    put<GameRole>(`/api/gameroles/${id}`, data),
+  delete: (id: number) =>
+    del(`/api/gameroles/${id}`),
 };
 
 // Users

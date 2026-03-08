@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -15,6 +12,8 @@
     <PackageReference Include="NSubstitute" Version="5.*" />
     <PackageReference Include="FluentAssertions" Version="7.*" />
     <PackageReference Include="Bogus" Version="35.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.*" />
   </ItemGroup>
 
   <ItemGroup>

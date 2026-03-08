@@ -12,11 +12,11 @@ public class Comment
 
     [Required]
     [MaxLength(2000)]
-    public string Text { get; set; } = string.Empty;
+    public required string Text { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
-    public TaskItem Task { get; set; } = null!;
-    public User Author { get; set; } = null!;
+    public TaskItem Task { get; set; } = null!; // EF Core populates
+    public User Author { get; set; } = null!; // EF Core populates
 }

@@ -29,6 +29,8 @@ export interface User {
   email: string | null;
   phone: string | null;
   role: UserRole;
+  gameRoleId: number | null;
+  gameRoleName: string | null;
   avatarColor: string;
   isActive: boolean;
   createdAt: string;
@@ -39,12 +41,14 @@ export interface CreateUserRequest {
   email: string;
   phone: string | null;
   role: UserRole;
+  gameRoleId?: number | null;
 }
 
 export interface UpdateUserRequest {
   name?: string;
   phone?: string;
   role?: UserRole;
+  gameRoleId?: number | null;
   isActive?: boolean;
 }
 
@@ -159,6 +163,29 @@ export interface CreateCategoryRequest {
 
 export interface UpdateCategoryRequest {
   name?: string;
+  color?: string;
+  sortOrder?: number;
+}
+
+// GameRole
+export interface GameRole {
+  id: number;
+  name: string;
+  description: string | null;
+  color: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface CreateGameRoleRequest {
+  name: string;
+  description?: string | null;
+  color: string;
+}
+
+export interface UpdateGameRoleRequest {
+  name?: string;
+  description?: string | null;
   color?: string;
   sortOrder?: number;
 }

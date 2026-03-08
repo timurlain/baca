@@ -23,6 +23,7 @@ export default function App() {
         <Route path="/voice" element={<Placeholder name="Hlasový vstup" />} />
         <Route path="/admin/users" element={<Placeholder name="Správa uživatelů" />} />
         <Route path="/admin/categories" element={<Placeholder name="Správa kategorií" />} />
+        <Route path="/admin/gameroles" element={<Placeholder name="Správa herních rolí" />} />
         <Route path="/admin/settings" element={<Placeholder name="Nastavení" />} />
         <Route path="/guide" element={<Placeholder name="Příručka" />} />
       </Routes>

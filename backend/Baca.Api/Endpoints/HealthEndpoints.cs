@@ -20,10 +20,11 @@ public static class HealthEndpoints
                 dbStatus = "error";
             }
 
-            return Results.Ok(new HealthResponse(
-                Status: "healthy",
-                Db: dbStatus
-            ));
+            return Results.Ok(new HealthResponse
+            {
+                Status = "healthy",
+                Db = dbStatus
+            });
         });
     }
 }

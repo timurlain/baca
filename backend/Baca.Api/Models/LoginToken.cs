@@ -15,5 +15,5 @@ public class LoginToken
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
-    public User User { get; set; } = null!;
+    public User User { get; set; } = null!; // EF Core populates
 }

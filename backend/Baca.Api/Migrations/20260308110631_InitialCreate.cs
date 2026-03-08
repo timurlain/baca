@@ -43,6 +43,23 @@ namespace Baca.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GameRoles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Color = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GameRoles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -52,6 +69,7 @@ namespace Baca.Api.Migrations
                     Email = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     Role = table.Column<string>(type: "text", nullable: false),
+                    GameRoleId = table.Column<int>(type: "integer", nullable: true),
                     AvatarColor = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false)
@@ -59,6 +77,12 @@ namespace Baca.Api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_GameRoles_GameRoleId",
+                        column: x => x.GameRoleId,
+                        principalTable: "GameRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -182,6 +206,12 @@ namespace Baca.Api.Migrations
                 column: "TaskId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_GameRoles_Name",
+                table: "GameRoles",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LoginTokens_Token",
                 table: "LoginTokens",
                 column: "Token",
@@ -223,6 +253,11 @@ namespace Baca.Api.Migrations
                 column: "Email",
                 unique: true,
                 filter: "\"Email\" IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_GameRoleId",
+                table: "Users",
+                column: "GameRoleId");
         }
 
         /// <inheritdoc />
@@ -245,6 +280,9 @@ namespace Baca.Api.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "GameRoles");
         }
     }
 }

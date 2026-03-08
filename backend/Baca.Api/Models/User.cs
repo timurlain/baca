@@ -8,7 +8,7 @@ public class User
 
     [Required]
     [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     [MaxLength(200)]
     public string? Email { get; set; }
@@ -18,6 +18,8 @@ public class User
 
     public UserRole Role { get; set; }
 
+    public int? GameRoleId { get; set; }
+
     [MaxLength(7)]
     public string AvatarColor { get; set; } = "#3B82F6";
 
@@ -26,6 +28,7 @@ public class User
     public bool IsActive { get; set; } = true;
 
     // Navigation properties
+    public GameRole? GameRole { get; set; }
     public ICollection<TaskItem> AssignedTasks { get; set; } = [];
     public ICollection<TaskItem> CreatedTasks { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = [];

@@ -13,6 +13,7 @@ public class BacaDbContext : DbContext
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<GameRole> GameRoles => Set<GameRole>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
     public DbSet<AppSettings> AppSettings => Set<AppSettings>();
 
@@ -25,6 +26,11 @@ public class BacaDbContext : DbContext
         {
             entity.HasIndex(u => u.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
             entity.Property(u => u.Role).HasConversion<string>();
+
+            entity.HasOne(u => u.GameRole)
+                .WithMany(gr => gr.Users)
+                .HasForeignKey(u => u.GameRoleId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // TaskItem
@@ -90,13 +96,19 @@ public class BacaDbContext : DbContext
             entity.HasIndex(c => c.Name).IsUnique();
         });
 
+        // GameRole
+        modelBuilder.Entity<GameRole>(entity =>
+        {
+            entity.HasIndex(gr => gr.Name).IsUnique();
+        });
+
         // AppSettings — single row
         modelBuilder.Entity<AppSettings>(entity =>
         {
             entity.HasData(new AppSettings
             {
                 Id = 1,
-                GuestPin = "",
+                GuestPin = string.Empty,
                 AppName = "Bača"
             });
         });

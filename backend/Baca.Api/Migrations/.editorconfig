@@ -1,0 +1,3 @@
+[*.cs]
+# Auto-generated migration code uses constant arrays as arguments
+dotnet_diagnostic.CA1861.severity = none

@@ -1,11 +1,13 @@
 namespace Baca.Api.DTOs;
 
-public record AppSettingsDto(
-    string GuestPin,
-    string AppName
-);
+public class AppSettingsDto
+{
+    public required string GuestPin { get; set; }
+    public required string AppName { get; set; }
+}
 
-public record UpdateSettingsRequest(
-    string? GuestPin,
-    string? AppName
-);
+public class UpdateSettingsRequest
+{
+    public string? GuestPin { get; set; }
+    public string? AppName { get; set; }
+}

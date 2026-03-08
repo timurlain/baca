@@ -116,6 +116,42 @@ namespace Baca.Api.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("Baca.Api.Models.GameRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("GameRoles");
+                });
+
             modelBuilder.Entity("Baca.Api.Models.LoginToken", b =>
                 {
                     b.Property<int>("Id")
@@ -233,6 +269,9 @@ namespace Baca.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int?>("GameRoleId")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -254,6 +293,8 @@ namespace Baca.Api.Migrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasFilter("\"Email\" IS NOT NULL");
+
+                    b.HasIndex("GameRoleId");
 
                     b.ToTable("Users");
                 });
@@ -320,9 +361,24 @@ namespace Baca.Api.Migrations
                     b.Navigation("ParentTask");
                 });
 
+            modelBuilder.Entity("Baca.Api.Models.User", b =>
+                {
+                    b.HasOne("Baca.Api.Models.GameRole", "GameRole")
+                        .WithMany("Users")
+                        .HasForeignKey("GameRoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("GameRole");
+                });
+
             modelBuilder.Entity("Baca.Api.Models.Category", b =>
                 {
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Baca.Api.Models.GameRole", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Baca.Api.Models.TaskItem", b =>

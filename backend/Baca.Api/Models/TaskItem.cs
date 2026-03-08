@@ -8,7 +8,7 @@ public class TaskItem
 
     [Required]
     [MaxLength(200)]
-    public string Title { get; set; } = string.Empty;
+    public required string Title { get; set; }
 
     public string? Description { get; set; }
 
@@ -36,7 +36,7 @@ public class TaskItem
     public Category? Category { get; set; }
     public User? Assignee { get; set; }
     public TaskItem? ParentTask { get; set; }
-    public User CreatedBy { get; set; } = null!;
+    public User CreatedBy { get; set; } = null!; // EF Core populates
     public ICollection<TaskItem> SubTasks { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = [];
 }

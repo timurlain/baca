@@ -2,13 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Baca.Api.Models;
 
-public class Category
+public class GameRole
 {
     public int Id { get; set; }
 
     [Required]
     [MaxLength(50)]
     public required string Name { get; set; }
+
+    [MaxLength(200)]
+    public string? Description { get; set; }
 
     [MaxLength(7)]
     public string Color { get; set; } = "#3B82F6";
@@ -18,5 +21,5 @@ public class Category
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
-    public ICollection<TaskItem> Tasks { get; set; } = [];
+    public ICollection<User> Users { get; set; } = [];
 }
