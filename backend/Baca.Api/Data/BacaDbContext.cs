@@ -10,7 +10,7 @@ public class BacaDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
-    public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<TaskItem> TaskItems => Set<TaskItem>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<GameRole> GameRoles => Set<GameRole>();
