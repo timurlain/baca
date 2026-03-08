@@ -42,13 +42,16 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const isFormData = options.body instanceof FormData;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers: isFormData
+      ? (options.headers as HeadersInit | undefined)
+      : {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
   });
 
   if (res.status === 401) {
@@ -62,6 +65,10 @@ async function request<T>(
 
   if (res.status === 204) return undefined as T;
   return res.json();
+}
+
+function postForm<T>(path: string, body: FormData): Promise<T> {
+  return request<T>(path, { method: 'POST', body });
 }
 
 function get<T>(path: string): Promise<T> {
@@ -199,16 +206,10 @@ export const dashboard = {
 
 // Voice
 export const voice = {
-  transcribe: async (audio: Blob): Promise<{ transcription: string }> => {
+  transcribe: (audio: Blob): Promise<{ transcription: string }> => {
     const formData = new FormData();
     formData.append('audio', audio);
-    const res = await fetch(`${BASE_URL}/api/voice/transcribe`, {
-      method: 'POST',
-      credentials: 'include',
-      body: formData,
-    });
-    if (!res.ok) throw new ApiError(res.status, await res.text());
-    return res.json();
+    return postForm<{ transcription: string }>('/api/voice/transcribe', formData);
   },
   parse: (data: { transcription: string }) =>
     post<VoiceParseResponse>('/api/voice/parse', data),
