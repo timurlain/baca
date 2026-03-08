@@ -28,9 +28,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Services — placeholder implementations (agents will replace)
-builder.Services.AddScoped<IAuthService, NotImplementedAuthService>();
-builder.Services.AddScoped<IEmailService, NotImplementedEmailService>();
+// Services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, NotImplementedDashboardService>();
 builder.Services.AddScoped<IVoiceTranscriptionService, NotImplementedVoiceTranscriptionService>();
 builder.Services.AddScoped<IVoiceParsingService, NotImplementedVoiceParsingService>();
