@@ -28,22 +28,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Services — placeholder implementations (agents will replace)
+// Services — real implementations
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddScoped<IAuthService, NotImplementedAuthService>();
-builder.Services.AddScoped<IEmailService, NotImplementedEmailService>();
+
+// Auth (Agent A)
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Dashboard + Voice + WhatsApp (Agent B)
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IVoiceTranscriptionService, VoiceTranscriptionService>();
 builder.Services.AddHttpClient<IVoiceParsingService, VoiceParsingService>();
 builder.Services.AddSingleton<ITwilioWhatsAppClient, TwilioWhatsAppClient>();
 builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
-// Services
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IDashboardService, NotImplementedDashboardService>();
-builder.Services.AddScoped<IVoiceTranscriptionService, NotImplementedVoiceTranscriptionService>();
-builder.Services.AddScoped<IVoiceParsingService, NotImplementedVoiceParsingService>();
-builder.Services.AddScoped<IWhatsAppNotificationService, NotImplementedWhatsAppNotificationService>();
 
 var app = builder.Build();
 
