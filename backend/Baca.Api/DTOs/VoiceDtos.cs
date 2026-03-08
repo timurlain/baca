@@ -2,6 +2,16 @@ using Baca.Api.Models;
 
 namespace Baca.Api.DTOs;
 
+public class TranscriptionResult
+{
+    public required string Transcription { get; set; }
+}
+
+public class VoiceParseRequest
+{
+    public required string Transcription { get; set; }
+}
+
 public class VoiceParseResponse
 {
     public string? Title { get; set; }

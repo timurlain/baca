@@ -136,11 +136,11 @@ public partial class Program;
 file sealed class NotImplementedAuthService : IAuthService
 {
     public Task<bool> RequestMagicLinkAsync(string email, CancellationToken ct) => throw new NotImplementedException();
-    public Task<User?> VerifyTokenAsync(string token, CancellationToken ct) => throw new NotImplementedException();
-    public Task<User?> VerifyGuestPinAsync(string pin, CancellationToken ct) => throw new NotImplementedException();
-    public Task<AuthResponse?> GetCurrentUserAsync(int userId, CancellationToken ct) => throw new NotImplementedException();
-    public string GenerateSessionCookie(User user) => throw new NotImplementedException();
-    public int? ValidateSessionCookie(string cookie) => throw new NotImplementedException();
+    public Task<Baca.Api.DTOs.AuthResponse?> VerifyTokenAsync(string token, CancellationToken ct) => throw new NotImplementedException();
+    public Task<Baca.Api.DTOs.AuthResponse?> VerifyGuestPinAsync(string pin, CancellationToken ct) => throw new NotImplementedException();
+    public Task<Baca.Api.DTOs.AuthResponse?> GetCurrentUserAsync(int userId, CancellationToken ct) => throw new NotImplementedException();
+    public Task<string> GenerateSessionCookieAsync(int userId, CancellationToken ct) => throw new NotImplementedException();
+    public Task<int?> ValidateSessionCookieAsync(string cookie, CancellationToken ct) => throw new NotImplementedException();
 }
 
 file sealed class NotImplementedEmailService : IEmailService
@@ -155,7 +155,7 @@ file sealed class NotImplementedDashboardService : IDashboardService
 
 file sealed class NotImplementedVoiceTranscriptionService : IVoiceTranscriptionService
 {
-    public Task<string> TranscribeAsync(Stream audioStream, string contentType, CancellationToken ct) => throw new NotImplementedException();
+    public Task<Baca.Api.DTOs.TranscriptionResult> TranscribeAsync(Stream audioStream, string contentType, CancellationToken ct) => throw new NotImplementedException();
 }
 
 file sealed class NotImplementedVoiceParsingService : IVoiceParsingService
