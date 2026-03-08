@@ -37,6 +37,13 @@ builder.Services.AddScoped<IVoiceTranscriptionService, VoiceTranscriptionService
 builder.Services.AddHttpClient<IVoiceParsingService, VoiceParsingService>();
 builder.Services.AddSingleton<ITwilioWhatsAppClient, TwilioWhatsAppClient>();
 builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
+// Services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IDashboardService, NotImplementedDashboardService>();
+builder.Services.AddScoped<IVoiceTranscriptionService, NotImplementedVoiceTranscriptionService>();
+builder.Services.AddScoped<IVoiceParsingService, NotImplementedVoiceParsingService>();
+builder.Services.AddScoped<IWhatsAppNotificationService, NotImplementedWhatsAppNotificationService>();
 
 var app = builder.Build();
 
@@ -141,22 +148,7 @@ static async Task SeedDataAsync(WebApplication app)
 // Make Program accessible for integration tests
 public partial class Program;
 
-// Placeholder service implementations
-file sealed class NotImplementedAuthService : IAuthService
-{
-    public Task<bool> RequestMagicLinkAsync(string email, CancellationToken ct) => throw new NotImplementedException();
-    public Task<Baca.Api.DTOs.AuthResponse?> VerifyTokenAsync(string token, CancellationToken ct) => throw new NotImplementedException();
-    public Task<Baca.Api.DTOs.AuthResponse?> VerifyGuestPinAsync(string pin, CancellationToken ct) => throw new NotImplementedException();
-    public Task<Baca.Api.DTOs.AuthResponse?> GetCurrentUserAsync(int userId, CancellationToken ct) => throw new NotImplementedException();
-    public Task<string> GenerateSessionCookieAsync(int userId, CancellationToken ct) => throw new NotImplementedException();
-    public Task<int?> ValidateSessionCookieAsync(string cookie, CancellationToken ct) => throw new NotImplementedException();
-}
-
-file sealed class NotImplementedEmailService : IEmailService
-{
-    public Task SendMagicLinkAsync(string email, string name, string token, CancellationToken ct) => throw new NotImplementedException();
-}
-
+// Placeholder service implementations (Agent B territory)
 file sealed class NotImplementedDashboardService : IDashboardService
 {
     public Task<DashboardDto> GetDashboardAsync(int? currentUserId, CancellationToken ct) => throw new NotImplementedException();
