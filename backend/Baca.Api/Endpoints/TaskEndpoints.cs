@@ -135,7 +135,7 @@ public static class TaskEndpoints
         CancellationToken ct)
     {
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var userId = GetUserId(context);
 
@@ -179,7 +179,7 @@ public static class TaskEndpoints
         CancellationToken ct)
     {
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var task = await db.TaskItems.FindAsync([id], ct);
         if (task is null)
@@ -215,7 +215,7 @@ public static class TaskEndpoints
         CancellationToken ct)
     {
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var task = await db.TaskItems
             .Include(t => t.Assignee)
@@ -267,7 +267,7 @@ public static class TaskEndpoints
         CancellationToken ct)
     {
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var task = await db.TaskItems.FindAsync([id], ct);
         if (task is null)
@@ -288,7 +288,7 @@ public static class TaskEndpoints
         CancellationToken ct)
     {
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var task = await db.TaskItems.FindAsync([id], ct);
         if (task is null)
@@ -310,7 +310,7 @@ public static class TaskEndpoints
         CancellationToken ct)
     {
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var task = await db.TaskItems
             .Include(t => t.Subtasks)

@@ -19,7 +19,7 @@ public static class FocusEndpoints
     {
         if (context.Items["Role"] is not UserRole role
             || role == UserRole.Guest)
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var userId = (int)context.Items["UserId"]!;
 
@@ -29,7 +29,7 @@ public static class FocusEndpoints
             .Include(t => t.Subtasks)
             .Where(t => t.AssigneeId == userId
                 && (t.Status == TaskItemStatus.Open || t.Status == TaskItemStatus.InProgress))
-            .OrderByDescending(t => t.Priority)
+            .OrderByDescending(t => t.Priority == Priority.High ? 2 : t.Priority == Priority.Medium ? 1 : 0)
             .ThenBy(t => t.DueDate.HasValue ? 0 : 1)
             .ThenBy(t => t.DueDate)
             .Take(3)

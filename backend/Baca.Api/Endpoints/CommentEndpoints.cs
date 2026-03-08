@@ -57,7 +57,7 @@ public static class CommentEndpoints
     {
         if (context.Items["Role"] is not UserRole role
             || role == UserRole.Guest)
-            return Results.Forbid();
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         var taskExists = await db.TaskItems.AnyAsync(t => t.Id == taskId, ct);
         if (!taskExists)
