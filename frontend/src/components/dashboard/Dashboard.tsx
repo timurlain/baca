@@ -2,16 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboard } from '@/api/client';
 import type { DashboardData, TaskItem } from '@/types';
+import { STATUS_LABELS } from '@/utils/constants';
 import StatsCard from './StatsCard';
 import ProgressChart from './ProgressChart';
-
-const STATUS_LABELS: Record<string, string> = {
-  Idea: 'Nápad',
-  Open: 'Otevřený',
-  InProgress: 'Rozpracovaný',
-  ForReview: 'K review',
-  Done: 'Hotovo',
-};
 
 function RecentTask({ task }: { task: TaskItem }) {
   const time = new Date(task.updatedAt).toLocaleString('cs-CZ', {

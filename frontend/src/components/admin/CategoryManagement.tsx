@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { categories } from '@/api/client';
 import type { Category, CreateCategoryRequest } from '@/types';
-
-const DEFAULT_COLORS = ['#3B82F6', '#EF4444', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
+import { DEFAULT_PALETTE } from '@/utils/constants';
+import ColorPicker from './ColorPicker';
+import StatusMessage, { type Message } from './StatusMessage';
 
 export default function CategoryManagement() {
   const [categoryList, setCategoryList] = useState<Category[]>([]);
@@ -10,14 +11,14 @@ export default function CategoryManagement() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [name, setName] = useState('');
-  const [color, setColor] = useState(DEFAULT_COLORS[0]);
-  const [message, setMessage] = useState<string | null>(null);
+  const [color, setColor] = useState(DEFAULT_PALETTE[0]);
+  const [message, setMessage] = useState<Message | null>(null);
 
   useEffect(() => {
     categories
       .list()
       .then(setCategoryList)
-      .catch(() => setMessage('Chyba načítání kategorií'))
+      .catch(() => setMessage({ text: 'Chyba načítání kategorií', type: 'error' }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -25,7 +26,7 @@ export default function CategoryManagement() {
     setShowForm(false);
     setEditId(null);
     setName('');
-    setColor(DEFAULT_COLORS[0]);
+    setColor(DEFAULT_PALETTE[0]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,15 +36,15 @@ export default function CategoryManagement() {
       if (editId !== null) {
         const updated = await categories.update(editId, { name, color });
         setCategoryList((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-        setMessage('Kategorie upravena');
+        setMessage({ text: 'Kategorie upravena', type: 'success' });
       } else {
         const created = await categories.create({ name, color } as CreateCategoryRequest);
         setCategoryList((prev) => [...prev, created]);
-        setMessage('Kategorie přidána');
+        setMessage({ text: 'Kategorie přidána', type: 'success' });
       }
       resetForm();
     } catch {
-      setMessage('Chyba při ukládání');
+      setMessage({ text: 'Chyba při ukládání', type: 'error' });
     }
   };
 
@@ -59,9 +60,9 @@ export default function CategoryManagement() {
     try {
       await categories.delete(cat.id);
       setCategoryList((prev) => prev.filter((c) => c.id !== cat.id));
-      setMessage('Kategorie smazána');
+      setMessage({ text: 'Kategorie smazána', type: 'success' });
     } catch {
-      setMessage('Nelze smazat — kategorie má přiřazené úkoly');
+      setMessage({ text: 'Nelze smazat — kategorie má přiřazené úkoly', type: 'error' });
     }
   };
 
@@ -81,11 +82,7 @@ export default function CategoryManagement() {
         )}
       </div>
 
-      {message && (
-        <p className={`text-sm ${message.includes('Chyba') || message.includes('Nelze') ? 'text-red-500' : 'text-green-600'}`}>
-          {message}
-        </p>
-      )}
+      <StatusMessage message={message} />
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
@@ -97,13 +94,7 @@ export default function CategoryManagement() {
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">Barva</label>
-            <div className="flex gap-2 flex-wrap">
-              {DEFAULT_COLORS.map((c) => (
-                <button key={c} type="button" onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full border-2 ${color === c ? 'border-gray-900 scale-110' : 'border-transparent'}`}
-                  style={{ backgroundColor: c }} aria-label={`Barva ${c}`} />
-              ))}
-            </div>
+            <ColorPicker colors={DEFAULT_PALETTE} value={color} onChange={setColor} />
           </div>
           <div className="flex gap-2">
             <button type="submit" className="flex-1 bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700">

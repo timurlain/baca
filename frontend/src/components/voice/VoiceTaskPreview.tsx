@@ -2,20 +2,7 @@ import { useState, useEffect } from 'react';
 import { tasks, users as usersApi, categories as categoriesApi } from '@/api/client';
 import { Priority, TaskStatus } from '@/types';
 import type { VoiceParseResponse, User, Category, CreateTaskRequest } from '@/types';
-
-const PRIORITY_LABELS: Record<string, string> = {
-  High: 'Vysoká',
-  Medium: 'Střední',
-  Low: 'Nízká',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  Idea: 'Nápad',
-  Open: 'Otevřený',
-  InProgress: 'Rozpracovaný',
-  ForReview: 'K review',
-  Done: 'Hotovo',
-};
+import { PRIORITY_LABELS, STATUS_LABELS } from '@/utils/constants';
 
 function confidenceClass(confidence: number | null): string {
   if (confidence === null || confidence === 0) return 'border-gray-300';

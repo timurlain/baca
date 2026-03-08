@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { processQueue, getPendingCount } from '@/offline/syncQueue';
 
 interface UseOnlineStatusResult {
@@ -12,6 +12,7 @@ export default function useOnlineStatus(): UseOnlineStatusResult {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const isSyncingRef = useRef(false);
 
   const refreshPendingCount = useCallback(async () => {
     try {
@@ -23,15 +24,17 @@ export default function useOnlineStatus(): UseOnlineStatusResult {
   }, []);
 
   const triggerSync = useCallback(async () => {
-    if (isSyncing) return;
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
     setIsSyncing(true);
     try {
       await processQueue();
       await refreshPendingCount();
     } finally {
+      isSyncingRef.current = false;
       setIsSyncing(false);
     }
-  }, [isSyncing, refreshPendingCount]);
+  }, [refreshPendingCount]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -46,7 +49,6 @@ export default function useOnlineStatus(): UseOnlineStatusResult {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Initial pending count
     void refreshPendingCount();
 
     return () => {

@@ -1,20 +1,5 @@
-import type { CategoryProgress } from '@/types';
-
-const STATUS_COLORS: Record<string, string> = {
-  Idea: '#9CA3AF',
-  Open: '#3B82F6',
-  InProgress: '#F59E0B',
-  ForReview: '#8B5CF6',
-  Done: '#10B981',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  Idea: 'Nápad',
-  Open: 'Otevřený',
-  InProgress: 'Rozpracovaný',
-  ForReview: 'K review',
-  Done: 'Hotovo',
-};
+import type { CategoryProgress, TaskStatus } from '@/types';
+import { STATUS_COLORS, STATUS_LABELS } from '@/utils/constants';
 
 interface DonutChartProps {
   tasksByStatus: Record<string, number>;
@@ -52,7 +37,7 @@ function DonutChart({ tasksByStatus, total }: DonutChartProps) {
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke={STATUS_COLORS[status] ?? '#D1D5DB'}
+              stroke={STATUS_COLORS[status as TaskStatus] ?? '#D1D5DB'}
               strokeWidth={strokeWidth}
               strokeDasharray={`${dashLength} ${circumference - dashLength}`}
               strokeDashoffset={dashOffset}
@@ -75,9 +60,9 @@ function DonutChart({ tasksByStatus, total }: DonutChartProps) {
           <div key={status} className="flex items-center gap-1.5 text-xs text-gray-600">
             <span
               className="inline-block w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: STATUS_COLORS[status] }}
+              style={{ backgroundColor: STATUS_COLORS[status as TaskStatus] }}
             />
-            {STATUS_LABELS[status] ?? status}: {count}
+            {STATUS_LABELS[status as TaskStatus] ?? status}: {count}
           </div>
         ))}
       </div>

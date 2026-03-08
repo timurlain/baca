@@ -2,18 +2,8 @@ import { useState, useEffect } from 'react';
 import { users, auth } from '@/api/client';
 import { UserRole } from '@/types';
 import type { User, CreateUserRequest, AuthResponse } from '@/types';
-
-const ROLE_COLORS: Record<string, string> = {
-  Admin: 'bg-red-100 text-red-700',
-  User: 'bg-blue-100 text-blue-700',
-  Guest: 'bg-gray-100 text-gray-700',
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  Admin: 'Admin',
-  User: 'Uživatel',
-  Guest: 'Host',
-};
+import { ROLE_LABELS, ROLE_BADGE_CLASSES } from '@/utils/constants';
+import StatusMessage, { type Message } from './StatusMessage';
 
 interface AddUserFormProps {
   onSubmit: (data: CreateUserRequest) => void;
@@ -83,7 +73,7 @@ export default function UserManagement() {
   const [currentUser, setCurrentUser] = useState<AuthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
 
   useEffect(() => {
     Promise.all([users.list(), auth.me()])
@@ -91,7 +81,7 @@ export default function UserManagement() {
         setUserList(u);
         setCurrentUser(me);
       })
-      .catch(() => setMessage('Chyba načítání'))
+      .catch(() => setMessage({ text: 'Chyba načítání', type: 'error' }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -100,31 +90,31 @@ export default function UserManagement() {
       const newUser = await users.create(data);
       setUserList((prev) => [...prev, newUser]);
       setShowForm(false);
-      setMessage('Uživatel přidán');
+      setMessage({ text: 'Uživatel přidán', type: 'success' });
     } catch {
-      setMessage('Chyba při přidávání uživatele');
+      setMessage({ text: 'Chyba při přidávání uživatele', type: 'error' });
     }
   };
 
   const handleToggleActive = async (user: User) => {
     if (currentUser && user.id === currentUser.id) {
-      setMessage('Nelze deaktivovat sám sebe');
+      setMessage({ text: 'Nelze deaktivovat sám sebe', type: 'error' });
       return;
     }
     try {
       const updated = await users.update(user.id, { isActive: !user.isActive });
       setUserList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     } catch {
-      setMessage('Chyba při změně stavu');
+      setMessage({ text: 'Chyba při změně stavu', type: 'error' });
     }
   };
 
   const handleResendLink = async (userId: number) => {
     try {
       await users.resendLink(userId);
-      setMessage('Odkaz odeslán');
+      setMessage({ text: 'Odkaz odeslán', type: 'success' });
     } catch {
-      setMessage('Chyba při odesílání odkazu');
+      setMessage({ text: 'Chyba při odesílání odkazu', type: 'error' });
     }
   };
 
@@ -146,11 +136,7 @@ export default function UserManagement() {
         )}
       </div>
 
-      {message && (
-        <p className={`text-sm ${message.includes('Chyba') || message.includes('Nelze') ? 'text-red-500' : 'text-green-600'}`}>
-          {message}
-        </p>
-      )}
+      <StatusMessage message={message} />
 
       {showForm && <AddUserForm onSubmit={handleAddUser} onCancel={() => setShowForm(false)} />}
 
@@ -184,7 +170,7 @@ export default function UserManagement() {
                   <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{user.email ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{user.phone ?? '—'}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[user.role] ?? ''}`}>
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE_CLASSES[user.role] ?? ''}`}>
                       {ROLE_LABELS[user.role] ?? user.role}
                     </span>
                   </td>

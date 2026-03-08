@@ -1,67 +1,25 @@
 import { useState } from 'react';
-import { voice, tasks } from '@/api/client';
-import type { VoiceParseResponse } from '@/types';
-import useVoiceRecorder from '@/hooks/useVoiceRecorder';
+import useVoiceFlow from '@/hooks/useVoiceFlow';
 import VoiceRecorder from './VoiceRecorder';
 import VoiceTaskPreview from './VoiceTaskPreview';
 
-type FabState = 'closed' | 'idle' | 'recording' | 'processing' | 'preview';
-
-interface VoiceFabProps {
-  isGuest?: boolean;
-}
-
-export default function VoiceFab({ isGuest = false }: VoiceFabProps) {
-  const recorder = useVoiceRecorder();
-  const [fabState, setFabState] = useState<FabState>('closed');
-  const [parsed, setParsed] = useState<VoiceParseResponse | null>(null);
-
-  if (isGuest) return null;
-
-  const handleOpen = () => setFabState('idle');
+export default function VoiceFab() {
+  const flow = useVoiceFlow();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleClose = () => {
-    recorder.reset();
-    setParsed(null);
-    setFabState('closed');
+    flow.handleReset();
+    setIsOpen(false);
   };
-
-  const handleStart = async () => {
-    await recorder.startRecording();
-    setFabState('recording');
-  };
-
-  const handleStop = () => {
-    recorder.stopRecording();
-  };
-
-  const processAudio = async (blob: Blob) => {
-    setFabState('processing');
-    try {
-      const { transcription } = await voice.transcribe(blob);
-      const result = await voice.parse({ transcription });
-      setParsed(result);
-      setFabState('preview');
-    } catch {
-      setFabState('idle');
-      recorder.reset();
-    }
-  };
-
-  if (recorder.state === 'stopped' && recorder.audioBlob && fabState === 'recording') {
-    processAudio(recorder.audioBlob);
-  }
 
   const handleSaved = () => {
-    // Trigger any global refetch by calling tasks.list (TanStack Query would invalidate here)
-    void tasks.list();
     handleClose();
   };
 
-  if (fabState === 'closed') {
+  if (!isOpen) {
     return (
       <button
-        onClick={handleOpen}
+        onClick={() => setIsOpen(true)}
         className="fixed right-4 bottom-20 md:bottom-8 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg hover:bg-green-700 flex items-center justify-center z-50"
         aria-label="Hlasový vstup"
       >
@@ -84,27 +42,23 @@ export default function VoiceFab({ isGuest = false }: VoiceFabProps) {
           </button>
         </div>
 
-        {fabState !== 'preview' && (
+        {flow.flowState !== 'preview' && (
           <VoiceRecorder
-            state={recorder.state === 'recording' ? 'recording' : 'idle'}
-            duration={recorder.duration}
-            error={recorder.error}
-            isProcessing={fabState === 'processing'}
-            onStart={handleStart}
-            onStop={handleStop}
+            state={flow.recorderState}
+            duration={flow.recorderDuration}
+            error={flow.recorderError}
+            isProcessing={flow.flowState === 'processing'}
+            onStart={flow.handleStart}
+            onStop={flow.handleStop}
             onCancel={handleClose}
           />
         )}
 
-        {fabState === 'preview' && parsed && (
+        {flow.flowState === 'preview' && flow.parsed && (
           <VoiceTaskPreview
-            parsed={parsed}
+            parsed={flow.parsed}
             onSave={handleSaved}
-            onRetry={() => {
-              recorder.reset();
-              setParsed(null);
-              setFabState('idle');
-            }}
+            onRetry={flow.handleRetry}
             onCancel={handleClose}
           />
         )}

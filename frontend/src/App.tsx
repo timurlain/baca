@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, createContext, useContext, type ReactNode } from 'react'
 import { auth } from '@/api/client'
 import type { AuthResponse } from '@/types'
 import { UserRole } from '@/types'
@@ -23,10 +23,16 @@ function ResponsiveHome() {
     : <Dashboard />
 }
 
-function AuthGuard({ children }: { children: ReactNode }) {
+// Auth context — single auth.me() call shared across the app
+const AuthContext = createContext<{ user: AuthResponse | null; loading: boolean }>({ user: null, loading: true })
+
+export function useAuthContext() {
+  return useContext(AuthContext)
+}
+
+function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const location = useLocation()
 
   useEffect(() => {
     auth.me()
@@ -34,6 +40,17 @@ function AuthGuard({ children }: { children: ReactNode }) {
       .catch(() => setUser(null))
       .finally(() => setLoading(false))
   }, [])
+
+  return (
+    <AuthContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+function AuthGuard({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuthContext()
+  const location = useLocation()
 
   if (loading) {
     return <div className="p-8 text-center text-gray-400">Načítání…</div>
@@ -47,11 +64,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
 }
 
 function AuthenticatedApp() {
-  const [user, setUser] = useState<AuthResponse | null>(null)
-
-  useEffect(() => {
-    auth.me().then(setUser).catch(() => {})
-  }, [])
+  const { user } = useAuthContext()
 
   return (
     <>
@@ -74,7 +87,7 @@ function AuthenticatedApp() {
         <Route path="/guide/admin" element={<AuthGuard><Placeholder name="Příručka — Správa" /></AuthGuard>} />
         <Route path="/guide/offline" element={<AuthGuard><Placeholder name="Příručka — Offline" /></AuthGuard>} />
       </Routes>
-      <VoiceFab isGuest={user?.role === UserRole.Guest} />
+      {user?.role !== UserRole.Guest && <VoiceFab />}
     </>
   )
 }
@@ -82,7 +95,9 @@ function AuthenticatedApp() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthenticatedApp />
+      <AuthProvider>
+        <AuthenticatedApp />
+      </AuthProvider>
     </BrowserRouter>
   )
 }

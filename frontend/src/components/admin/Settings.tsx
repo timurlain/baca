@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { settings } from '@/api/client';
-import type { AppSettings } from '@/types';
+import StatusMessage, { type Message } from './StatusMessage';
 
 export default function Settings() {
-  const [data, setData] = useState<AppSettings | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
   const [guestPin, setGuestPin] = useState('');
   const [appName, setAppName] = useState('');
 
@@ -14,11 +14,11 @@ export default function Settings() {
     settings
       .get()
       .then((s) => {
-        setData(s);
         setGuestPin(s.guestPin);
         setAppName(s.appName);
+        setLoaded(true);
       })
-      .catch(() => setMessage('Chyba načítání nastavení'))
+      .catch(() => setMessage({ text: 'Chyba načítání nastavení', type: 'error' }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -26,11 +26,10 @@ export default function Settings() {
     setSaving(true);
     setMessage(null);
     try {
-      const updated = await settings.update({ guestPin, appName });
-      setData(updated);
-      setMessage('Nastavení uloženo');
+      await settings.update({ guestPin, appName });
+      setMessage({ text: 'Nastavení uloženo', type: 'success' });
     } catch {
-      setMessage('Chyba při ukládání');
+      setMessage({ text: 'Chyba při ukládání', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -40,8 +39,8 @@ export default function Settings() {
     return <div className="p-8 text-center text-gray-400">Načítání nastavení...</div>;
   }
 
-  if (!data) {
-    return <div className="p-8 text-center text-red-500">{message ?? 'Chyba'}</div>;
+  if (!loaded) {
+    return <div className="p-8 text-center text-red-500">{message?.text ?? 'Chyba'}</div>;
   }
 
   return (
@@ -83,11 +82,7 @@ export default function Settings() {
           {saving ? 'Ukládání...' : 'Uložit'}
         </button>
 
-        {message && (
-          <p className={`text-sm text-center ${message.includes('Chyba') ? 'text-red-500' : 'text-green-600'}`}>
-            {message}
-          </p>
-        )}
+        <StatusMessage message={message} />
       </div>
     </div>
   );
