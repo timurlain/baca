@@ -33,8 +33,8 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IAuthService, NotImplementedAuthService>();
 builder.Services.AddScoped<IEmailService, NotImplementedEmailService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IVoiceTranscriptionService, NotImplementedVoiceTranscriptionService>();
-builder.Services.AddScoped<IVoiceParsingService, NotImplementedVoiceParsingService>();
+builder.Services.AddScoped<IVoiceTranscriptionService, VoiceTranscriptionService>();
+builder.Services.AddHttpClient<IVoiceParsingService, VoiceParsingService>();
 builder.Services.AddSingleton<ITwilioWhatsAppClient, TwilioWhatsAppClient>();
 builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
 
