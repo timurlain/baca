@@ -19,6 +19,8 @@ import type {
   LoginRequest,
   GuestLoginRequest,
   AuthResponse,
+  TranscriptionResult,
+  VoiceParseRequest,
   VoiceParseResponse,
   DashboardData,
   FocusTask,
@@ -206,12 +208,12 @@ export const dashboard = {
 
 // Voice
 export const voice = {
-  transcribe: (audio: Blob): Promise<{ transcription: string }> => {
+  transcribe: (audio: Blob): Promise<TranscriptionResult> => {
     const formData = new FormData();
     formData.append('audio', audio);
-    return postForm<{ transcription: string }>('/api/voice/transcribe', formData);
+    return postForm<TranscriptionResult>('/api/voice/transcribe', formData);
   },
-  parse: (data: { transcription: string }) =>
+  parse: (data: VoiceParseRequest) =>
     post<VoiceParseResponse>('/api/voice/parse', data),
 };
 
