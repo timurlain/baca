@@ -2,8 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import FocusPage from '@/components/focus/FocusPage';
-import { tasks as tasksApi } from '@/api/client';
-import * as useFocusHook from '@/hooks/useFocus';
 
 // Mock the hooks
 vi.mock('@/hooks/useAuth', () => ({
@@ -18,22 +16,16 @@ const mockTasks = [
 ];
 
 const mockRefresh = vi.fn();
+const mockChangeStatus = vi.fn();
 
-vi.mock('@/hooks/useFocus', () => ({
-  useFocus: vi.fn(() => ({
-    tasks: mockTasks,
+vi.mock('@/hooks/useOfflineFocus', () => ({
+  default: vi.fn(() => ({
+    focusTasks: mockTasks,
     loading: false,
     error: null,
+    changeStatus: mockChangeStatus,
     refresh: mockRefresh,
   })),
-}));
-
-vi.mock('@/api/client', () => ({
-  tasks: {
-    changeStatus: vi.fn(),
-  },
-  users: { list: vi.fn() },
-  categories: { list: vi.fn() }
 }));
 
 describe('FocusPage', () => {
@@ -52,20 +44,22 @@ describe('FocusPage', () => {
         <FocusPage />
       </BrowserRouter>
     );
-    
+
     const doneButton = screen.getByText('Hotovo');
     await act(async () => {
       fireEvent.click(doneButton);
     });
-    
-    expect(tasksApi.changeStatus).toHaveBeenCalledWith(1, { status: 'Done' });
+
+    expect(mockChangeStatus).toHaveBeenCalledWith(1, { status: 'Done' });
   });
 
-  it('renders empty state when no tasks', () => {
-    vi.mocked(useFocusHook.useFocus).mockReturnValueOnce({
-      tasks: [],
+  it('renders empty state when no tasks', async () => {
+    const useOfflineFocus = await import('@/hooks/useOfflineFocus');
+    vi.mocked(useOfflineFocus.default).mockReturnValueOnce({
+      focusTasks: [],
       loading: false,
       error: null,
+      changeStatus: mockChangeStatus,
       refresh: mockRefresh,
     });
 

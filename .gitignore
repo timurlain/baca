@@ -55,3 +55,4 @@ docker-compose.override.yml
 **/appsettings.Local.json
 /backend/restore.log
 /backend/build.binlog
+/.claude/settings.local.json

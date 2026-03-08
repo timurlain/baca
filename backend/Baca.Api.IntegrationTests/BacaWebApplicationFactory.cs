@@ -17,7 +17,9 @@ public class BacaWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         .WithPassword("test")
         .Build();
 
-    public BacaWebApplicationFactory(Action<IServiceCollection>? configureServices = null)
+    public BacaWebApplicationFactory() { }
+
+    internal BacaWebApplicationFactory(Action<IServiceCollection> configureServices)
     {
         _configureServices = configureServices;
     }
@@ -38,13 +40,15 @@ public class BacaWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             services.AddDbContext<BacaDbContext>(options =>
                 options.UseNpgsql(_postgres.GetConnectionString()));
 
-            _configureServices?.Invoke(services);
-            // Replace EmailService with no-op for tests
+            // Replace EmailService with no-op for tests (unless overridden by custom config)
             var emailDescriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(IEmailService));
             if (emailDescriptor != null)
                 services.Remove(emailDescriptor);
             services.AddScoped<IEmailService, NoOpEmailService>();
+
+            // Custom service overrides run last so they can replace defaults
+            _configureServices?.Invoke(services);
         });
     }
 

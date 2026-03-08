@@ -64,6 +64,39 @@ app.MapFocusEndpoints();
 app.MapVoiceEndpoints();
 app.MapSettingsEndpoints();
 
+// Test-only endpoint for E2E authentication (never available in Production)
+if (!app.Environment.IsProduction())
+{
+    app.MapPost("/api/test/login/{email}", async (
+        string email,
+        BacaDbContext db,
+        IAuthService authService,
+        HttpContext context,
+        CancellationToken ct) =>
+    {
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        if (user is null)
+            return Results.NotFound();
+
+        var cookie = await authService.GenerateSessionCookieAsync(user.Id, ct);
+        context.Response.Cookies.Append(AuthMiddleware.CookieName, cookie, new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.Lax,
+            MaxAge = TimeSpan.FromDays(1),
+            Path = "/"
+        });
+
+        return Results.Ok(new AuthResponse
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Role = user.Role,
+            AvatarColor = user.AvatarColor
+        });
+    });
+}
+
 app.Run();
 
 // Seed data
@@ -144,24 +177,3 @@ static async Task SeedDataAsync(WebApplication app)
 
 // Make Program accessible for integration tests
 public partial class Program;
-
-// Placeholder service implementations (Agent B territory)
-file sealed class NotImplementedDashboardService : IDashboardService
-{
-    public Task<DashboardDto> GetDashboardAsync(int? currentUserId, CancellationToken ct) => throw new NotImplementedException();
-}
-
-file sealed class NotImplementedVoiceTranscriptionService : IVoiceTranscriptionService
-{
-    public Task<Baca.Api.DTOs.TranscriptionResult> TranscribeAsync(Stream audioStream, string contentType, CancellationToken ct) => throw new NotImplementedException();
-}
-
-file sealed class NotImplementedVoiceParsingService : IVoiceParsingService
-{
-    public Task<VoiceParseResponse> ParseTranscriptionAsync(string transcription, CancellationToken ct) => throw new NotImplementedException();
-}
-
-file sealed class NotImplementedWhatsAppNotificationService : IWhatsAppNotificationService
-{
-    public Task SendTaskAssignedAsync(TaskItem task, User assignee, User assignedBy, CancellationToken ct) => throw new NotImplementedException();
-}
