@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Baca.Api.Migrations
 {
     [DbContext(typeof(BacaDbContext))]
-    [Migration("20260308114555_InitialCreate")]
+    [Migration("20260308114714_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -343,7 +343,7 @@ namespace Baca.Api.Migrations
                         .IsRequired();
 
                     b.HasOne("Baca.Api.Models.TaskItem", "ParentTask")
-                        .WithMany("SubTasks")
+                        .WithMany("Subtasks")
                         .HasForeignKey("ParentTaskId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -380,7 +380,7 @@ namespace Baca.Api.Migrations
                 {
                     b.Navigation("Comments");
 
-                    b.Navigation("SubTasks");
+                    b.Navigation("Subtasks");
                 });
 
             modelBuilder.Entity("Baca.Api.Models.User", b =>

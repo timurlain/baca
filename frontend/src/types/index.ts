@@ -97,7 +97,7 @@ export interface TaskDetail {
   createdByName: string;
   createdAt: string;
   updatedAt: string;
-  subTasks: TaskItem[];
+  subtasks: TaskItem[];
   comments: Comment[];
 }
 

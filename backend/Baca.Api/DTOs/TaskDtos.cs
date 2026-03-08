@@ -48,7 +48,7 @@ public class TaskDetailDto
     public required string CreatedByName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public List<TaskDto> SubTasks { get; set; } = [];
+    public List<TaskDto> Subtasks { get; set; } = [];
     public List<CommentDto> Comments { get; set; } = [];
 }
 

@@ -55,7 +55,7 @@ public class BacaDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(t => t.ParentTask)
-                .WithMany(t => t.SubTasks)
+                .WithMany(t => t.Subtasks)
                 .HasForeignKey(t => t.ParentTaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 

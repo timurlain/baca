@@ -99,7 +99,7 @@ export const handlers = [
 
   // Tasks
   http.get('/api/tasks', () => HttpResponse.json(mockTasks)),
-  http.get('/api/tasks/:id', () => HttpResponse.json({ ...mockTasks[0], subTasks: [], comments: [] })),
+  http.get('/api/tasks/:id', () => HttpResponse.json({ ...mockTasks[0], subtasks: [], comments: [] })),
   http.post('/api/tasks', () => HttpResponse.json(mockTasks[0], { status: 201 })),
   http.put('/api/tasks/:id', () => HttpResponse.json(mockTasks[0])),
   http.patch('/api/tasks/:id/status', () => HttpResponse.json(mockTasks[0])),

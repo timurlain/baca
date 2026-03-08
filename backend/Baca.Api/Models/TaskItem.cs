@@ -37,6 +37,6 @@ public class TaskItem
     public User? Assignee { get; set; }
     public TaskItem? ParentTask { get; set; }
     public User CreatedBy { get; set; } = null!; // EF Core populates
-    public ICollection<TaskItem> SubTasks { get; set; } = [];
+    public ICollection<TaskItem> Subtasks { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = [];
 }

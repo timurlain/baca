@@ -340,7 +340,7 @@ namespace Baca.Api.Migrations
                         .IsRequired();
 
                     b.HasOne("Baca.Api.Models.TaskItem", "ParentTask")
-                        .WithMany("SubTasks")
+                        .WithMany("Subtasks")
                         .HasForeignKey("ParentTaskId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -377,7 +377,7 @@ namespace Baca.Api.Migrations
                 {
                     b.Navigation("Comments");
 
-                    b.Navigation("SubTasks");
+                    b.Navigation("Subtasks");
                 });
 
             modelBuilder.Entity("Baca.Api.Models.User", b =>
