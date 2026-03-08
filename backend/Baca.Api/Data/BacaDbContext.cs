@@ -102,15 +102,6 @@ public class BacaDbContext : DbContext
             entity.HasIndex(gr => gr.Name).IsUnique();
         });
 
-        // AppSettings — single row
-        modelBuilder.Entity<AppSettings>(entity =>
-        {
-            entity.HasData(new AppSettings
-            {
-                Id = 1,
-                GuestPin = string.Empty,
-                AppName = "Bača"
-            });
-        });
+        // AppSettings — single row, seeded at runtime in Program.cs
     }
 }

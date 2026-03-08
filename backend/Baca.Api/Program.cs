@@ -115,7 +115,8 @@ static async Task SeedDataAsync(WebApplication app)
         await db.SaveChangesAsync();
     }
 
-    if (await db.AppSettings.FindAsync(1) is null)
+    var settings = await db.AppSettings.FindAsync(1);
+    if (settings is null)
     {
         var defaultPin = app.Configuration["Seed:GuestPin"] ?? "ovcina2026";
         var hashedPin = BCrypt.Net.BCrypt.HashPassword(defaultPin);
@@ -125,6 +126,12 @@ static async Task SeedDataAsync(WebApplication app)
             GuestPin = hashedPin,
             AppName = "Bača"
         });
+        await db.SaveChangesAsync();
+    }
+    else if (string.IsNullOrEmpty(settings.GuestPin))
+    {
+        var defaultPin = app.Configuration["Seed:GuestPin"] ?? "ovcina2026";
+        settings.GuestPin = BCrypt.Net.BCrypt.HashPassword(defaultPin);
         await db.SaveChangesAsync();
     }
 }
