@@ -35,7 +35,8 @@ builder.Services.AddScoped<IEmailService, NotImplementedEmailService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IVoiceTranscriptionService, NotImplementedVoiceTranscriptionService>();
 builder.Services.AddScoped<IVoiceParsingService, NotImplementedVoiceParsingService>();
-builder.Services.AddScoped<IWhatsAppNotificationService, NotImplementedWhatsAppNotificationService>();
+builder.Services.AddSingleton<ITwilioWhatsAppClient, TwilioWhatsAppClient>();
+builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
 
 var app = builder.Build();
 
