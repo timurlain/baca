@@ -6,7 +6,6 @@ async function loginAsAdmin(page: Page) {
 
 function mockMediaRecorder(page: Page) {
   return page.addInitScript(() => {
-    // Mock MediaRecorder API
     class MockMediaRecorder {
       state = 'inactive';
       ondataavailable: ((event: { data: Blob }) => void) | null = null;
@@ -25,7 +24,6 @@ function mockMediaRecorder(page: Page) {
 
       stop() {
         this.state = 'inactive';
-        // Emit a fake blob
         const blob = new Blob(['fake-audio-data'], { type: 'audio/webm' });
         if (this.ondataavailable) {
           this.ondataavailable({ data: blob });
@@ -54,7 +52,6 @@ function mockMediaRecorder(page: Page) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as unknown as Record<string, any>).MediaRecorder = MockMediaRecorder;
 
-    // Mock getUserMedia
     if (!navigator.mediaDevices) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (navigator as unknown as Record<string, any>).mediaDevices = {};
@@ -111,34 +108,25 @@ test.describe('Voice Input', () => {
   test('click mic button shows recording UI', async ({ page }) => {
     await page.goto('/voice');
 
-    const micButton = page.getByRole('button', { name: /mikrofon|nahrát|nahrávat|mic/i }).or(
-      page.locator('[data-testid="mic-button"], button[aria-label*="mic"], button[aria-label*="record"]')
-    );
-
+    // VoiceRecorder has aria-label "Začít nahrávat" which matches /nahrávat/i
+    const micButton = page.getByRole('button', { name: /nahrávat|nahrát/i });
     await expect(micButton).toBeVisible({ timeout: 10000 });
     await micButton.click();
 
-    // Recording UI should appear (e.g., stop button, recording indicator, timer)
-    const recordingIndicator = page.getByText(/nahrávání|nahrávám|recording/i).or(
-      page.getByRole('button', { name: /stop|zastavit/i })
-    ).or(
-      page.locator('[data-testid="recording-indicator"], .recording')
-    );
-
-    await expect(recordingIndicator).toBeVisible({ timeout: 10000 });
+    // After clicking, aria-label changes to "Zastavit nahrávání"
+    await expect(
+      page.getByRole('button', { name: /zastavit/i })
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test('preview shows parsed fields after recording', async ({ page }) => {
     await page.goto('/voice');
 
-    const micButton = page.getByRole('button', { name: /mikrofon|nahrát|nahrávat|mic/i }).or(
-      page.locator('[data-testid="mic-button"], button[aria-label*="mic"], button[aria-label*="record"]')
-    );
-
+    const micButton = page.getByRole('button', { name: /nahrávat|nahrát/i });
     await micButton.click();
 
-    // Stop recording
-    const stopButton = page.getByRole('button', { name: /stop|zastavit|dokončit/i });
+    // Stop recording - same button toggles
+    const stopButton = page.getByRole('button', { name: /zastavit/i });
     if (await stopButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await stopButton.click();
     }
@@ -152,11 +140,8 @@ test.describe('Voice Input', () => {
   test('FAB button visible on board page for non-guests', async ({ page }) => {
     await page.goto('/board');
 
-    // Voice FAB (floating action button) should be visible
-    const fab = page.locator(
-      '[data-testid="voice-fab"], button[aria-label*="hlas"], button[aria-label*="voice"], .fab'
-    ).or(page.getByRole('button', { name: /hlas|voice|mikrofon/i }));
-
+    // VoiceFab has aria-label "Hlasový vstup"
+    const fab = page.getByRole('button', { name: /hlasový/i });
     await expect(fab).toBeVisible({ timeout: 10000 });
   });
 });

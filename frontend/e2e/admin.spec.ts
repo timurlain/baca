@@ -12,33 +12,25 @@ test.describe('Admin Pages', () => {
   test('users page shows user table', async ({ page }) => {
     await page.goto('/admin/users');
 
-    const table = page.getByRole('table').or(page.locator('table, [data-testid="user-table"]'));
+    const table = page.getByRole('table');
     await expect(table).toBeVisible({ timeout: 10000 });
 
-    // Admin user should be listed
-    await expect(page.getByText('admin@baca.local')).toBeVisible();
+    // Admin user should be listed (seeded as "Tomáš" with email "admin@baca.local")
+    await expect(page.getByText('admin@baca.local')).toBeVisible({ timeout: 10000 });
   });
 
   test('add new user appears in table', async ({ page }) => {
     await page.goto('/admin/users');
 
-    // Click add user button
-    const addButton = page.getByRole('button', { name: /přidat|nový/i });
-    await expect(addButton).toBeVisible({ timeout: 10000 });
-    await addButton.click();
+    // Click "Přidat uživatele" button
+    await page.getByRole('button', { name: /přidat/i }).click();
 
-    // Fill in user details
-    const emailInput = page.getByLabel(/e-mail|email/i);
-    await emailInput.fill('e2e-test-user@baca.local');
+    // Fill in user details - labels are "Jméno" and "Email"
+    await page.getByLabel(/jméno/i).fill('E2E Test User');
+    await page.getByLabel(/email/i).fill('e2e-test-user@baca.local');
 
-    const nameInput = page.getByLabel(/jméno|name/i);
-    if (await nameInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await nameInput.fill('E2E Test User');
-    }
-
-    // Submit
-    const submitButton = page.getByRole('button', { name: /uložit|přidat|vytvořit/i });
-    await submitButton.click();
+    // Submit with "Přidat" button
+    await page.getByRole('button', { name: /přidat/i }).last().click();
 
     // New user should appear in the table
     await expect(page.getByText('e2e-test-user@baca.local')).toBeVisible({ timeout: 10000 });
@@ -57,12 +49,9 @@ test.describe('Admin Pages', () => {
   test('settings page is accessible', async ({ page }) => {
     await page.goto('/admin/settings');
 
-    // Settings page should render without redirecting to login
     await expect(page).not.toHaveURL(/\/login/);
 
-    // Some settings content should be visible
-    await expect(
-      page.getByText(/nastavení|settings/i).first()
-    ).toBeVisible({ timeout: 10000 });
+    // Settings heading should be visible
+    await expect(page.getByText('Nastavení')).toBeVisible({ timeout: 10000 });
   });
 });

@@ -17,37 +17,34 @@ test.describe('Mobile Layout', () => {
     await loginAsAdmin(page);
     await page.goto('/');
 
-    // Should land on Focus page (not dashboard/board)
     await expect(page).not.toHaveURL(/\/board/);
     await expect(page).not.toHaveURL(/\/dashboard/);
 
-    // Focus-related content should be visible
+    // Focus heading "Můj fokus" should be visible
     await expect(
-      page.getByText(/focus|úkoly|moje úkoly/i).first()
+      page.getByText(/fokus|focus|moje/i).first()
     ).toBeVisible({ timeout: 10000 });
   });
 
-  test('bottom tab bar is visible with tabs', async ({ page }) => {
+  test('bottom tab bar is visible with navigation links', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/');
 
-    // Bottom navigation bar should be visible
-    const tabBar = page.locator(
-      'nav, [role="tablist"], [data-testid="tab-bar"], [data-testid="bottom-nav"]'
-    ).last();
-    await expect(tabBar).toBeVisible({ timeout: 10000 });
+    // Bottom navigation bar (last <nav> on page)
+    const nav = page.locator('nav').last();
+    await expect(nav).toBeVisible({ timeout: 10000 });
 
-    // Should have multiple tab items
-    const tabs = tabBar.getByRole('tab').or(tabBar.getByRole('link')).or(tabBar.locator('a, button'));
-    const tabCount = await tabs.count();
-    expect(tabCount).toBeGreaterThanOrEqual(2);
+    // Should have multiple navigation links
+    const links = nav.locator('a');
+    const linkCount = await links.count();
+    expect(linkCount).toBeGreaterThanOrEqual(2);
   });
 
   test('board page shows columns', async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto('/board');
 
-    // At least some columns should be present (they may scroll horizontally on mobile)
+    // At least some columns should be present
     const columnNames = ['Nápad', 'Otevřeno', 'V řešení', 'K revizi', 'Hotovo'];
     let visibleColumns = 0;
 
@@ -58,20 +55,20 @@ test.describe('Mobile Layout', () => {
       }
     }
 
-    // At least one column should be visible (others may require scrolling)
     expect(visibleColumns).toBeGreaterThanOrEqual(1);
   });
 
   test('task cards are present on focus page', async ({ page }) => {
     await loginAsAdmin(page);
 
-    // Seed a task
-    await page.request.post('/api/tasks', {
+    // Create and assign task to current user
+    const response = await page.request.post('/api/tasks', {
       data: { title: 'E2E Mobile Focus Card', priority: 'High' },
     });
+    const task = await response.json();
+    await page.request.patch(`/api/tasks/${task.id}/assign-me`);
 
     await page.goto('/');
-
     await expect(page.getByText('E2E Mobile Focus Card')).toBeVisible({ timeout: 10000 });
   });
 
@@ -79,9 +76,9 @@ test.describe('Mobile Layout', () => {
     await loginAsGuest(page);
     await page.goto('/');
 
-    // Admin tab/link should not be visible for guests
+    // Admin link should not be visible for guests
     await expect(
-      page.getByRole('link', { name: /admin/i }).or(page.getByText(/admin/i))
+      page.getByRole('link', { name: /admin/i })
     ).not.toBeVisible({ timeout: 5000 });
   });
 });
