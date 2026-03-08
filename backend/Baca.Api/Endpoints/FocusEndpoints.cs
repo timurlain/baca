@@ -25,8 +25,6 @@ public static class FocusEndpoints
 
         var tasks = await db.TaskItems
             .AsNoTracking()
-            .Include(t => t.Category)
-            .Include(t => t.Subtasks)
             .Where(t => t.AssigneeId == userId
                 && (t.Status == TaskItemStatus.Open || t.Status == TaskItemStatus.InProgress))
             .OrderByDescending(t => t.Priority == Priority.High ? 2 : t.Priority == Priority.Medium ? 1 : 0)

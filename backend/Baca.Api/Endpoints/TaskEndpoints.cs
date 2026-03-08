@@ -162,13 +162,16 @@ public static class TaskEndpoints
         db.TaskItems.Add(task);
         await db.SaveChangesAsync(ct);
 
-        await db.Entry(task).Reference(t => t.CreatedBy).LoadAsync(ct);
-        if (task.CategoryId is not null)
-            await db.Entry(task).Reference(t => t.Category).LoadAsync(ct);
-        if (task.AssigneeId is not null)
-            await db.Entry(task).Reference(t => t.Assignee).LoadAsync(ct);
+        var created = await db.TaskItems
+            .AsNoTracking()
+            .Include(t => t.Category)
+            .Include(t => t.Assignee)
+            .Include(t => t.CreatedBy)
+            .Include(t => t.Subtasks)
+            .Include(t => t.Comments)
+            .FirstAsync(t => t.Id == task.Id, ct);
 
-        return Results.Created($"/api/tasks/{task.Id}", ToDto(task));
+        return Results.Created($"/api/tasks/{task.Id}", ToDto(created));
     }
 
     private static async Task<IResult> UpdateAsync(
@@ -197,13 +200,16 @@ public static class TaskEndpoints
         task.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
-        await db.Entry(task).Reference(t => t.CreatedBy).LoadAsync(ct);
-        if (task.CategoryId is not null)
-            await db.Entry(task).Reference(t => t.Category).LoadAsync(ct);
-        if (task.AssigneeId is not null)
-            await db.Entry(task).Reference(t => t.Assignee).LoadAsync(ct);
+        var updated = await db.TaskItems
+            .AsNoTracking()
+            .Include(t => t.Category)
+            .Include(t => t.Assignee)
+            .Include(t => t.CreatedBy)
+            .Include(t => t.Subtasks)
+            .Include(t => t.Comments)
+            .FirstAsync(t => t.Id == task.Id, ct);
 
-        return Results.Ok(ToDto(task));
+        return Results.Ok(ToDto(updated));
     }
 
     private static async Task<IResult> ChangeStatusAsync(
@@ -312,17 +318,12 @@ public static class TaskEndpoints
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
             return Results.StatusCode(StatusCodes.Status403Forbidden);
 
-        var task = await db.TaskItems
-            .Include(t => t.Subtasks)
-                .ThenInclude(s => s.Comments)
-            .Include(t => t.Comments)
-            .FirstOrDefaultAsync(t => t.Id == id, ct);
+        var deleted = await db.TaskItems
+            .Where(t => t.Id == id)
+            .ExecuteDeleteAsync(ct);
 
-        if (task is null)
+        if (deleted == 0)
             return Results.NotFound();
-
-        db.TaskItems.Remove(task);
-        await db.SaveChangesAsync(ct);
 
         return Results.NoContent();
     }

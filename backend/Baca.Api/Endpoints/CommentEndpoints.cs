@@ -30,7 +30,6 @@ public static class CommentEndpoints
 
         var comments = await db.Comments
             .AsNoTracking()
-            .Include(c => c.Author)
             .Where(c => c.TaskId == taskId)
             .OrderBy(c => c.CreatedAt)
             .Select(c => new CommentDto

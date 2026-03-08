@@ -31,14 +31,16 @@ public class AuthMiddleware
             return;
         }
 
-        var userId = await authService.ValidateSessionCookieAsync(cookie);
+        var ct = context.RequestAborted;
+
+        var userId = await authService.ValidateSessionCookieAsync(cookie, ct);
         if (userId is null)
         {
             context.Response.StatusCode = 401;
             return;
         }
 
-        var user = await authService.GetCurrentUserAsync(userId.Value);
+        var user = await authService.GetCurrentUserAsync(userId.Value, ct);
         if (user is null)
         {
             context.Response.StatusCode = 401;
