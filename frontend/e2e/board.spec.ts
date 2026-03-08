@@ -15,6 +15,23 @@ async function loginAsAdmin(page: Page) {
   }
 }
 
+async function createTask(page: Page, title: string) {
+  const result = await page.evaluate(async (title) => {
+    const resp = await fetch('/api/tasks', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Create task failed: ${resp.status} - ${text}`);
+    }
+    return resp.json();
+  }, title);
+  return result;
+}
+
 test.describe('Board', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
@@ -31,18 +48,10 @@ test.describe('Board', () => {
   });
 
   test('task created via API appears on the board', async ({ page }) => {
-    // Create task via browser fetch to ensure cookies are sent
     await page.goto('/board');
     await page.waitForLoadState('networkidle');
 
-    await page.evaluate(() =>
-      fetch('/api/tasks', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'E2E Board Test Task', priority: 'Medium' }),
-      })
-    );
+    await createTask(page, 'E2E Board Test Task');
 
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -50,18 +59,10 @@ test.describe('Board', () => {
   });
 
   test('clicking a task card opens detail modal', async ({ page }) => {
-    // Create task
     await page.goto('/board');
     await page.waitForLoadState('networkidle');
 
-    await page.evaluate(() =>
-      fetch('/api/tasks', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'E2E Detail Modal Task', priority: 'Medium' }),
-      })
-    );
+    await createTask(page, 'E2E Detail Modal Task');
 
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -72,18 +73,10 @@ test.describe('Board', () => {
   });
 
   test('delete task removes it from board', async ({ page }) => {
-    // Create task
     await page.goto('/board');
     await page.waitForLoadState('networkidle');
 
-    await page.evaluate(() =>
-      fetch('/api/tasks', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'E2E Delete This Task', priority: 'Medium' }),
-      })
-    );
+    await createTask(page, 'E2E Delete This Task');
 
     await page.reload();
     await page.waitForLoadState('networkidle');
