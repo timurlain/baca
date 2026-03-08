@@ -53,3 +53,5 @@ docker-compose.override.yml
 # Secrets
 **/appsettings.Development.json
 **/appsettings.Local.json
+/backend/restore.log
+/backend/build.binlog
