@@ -74,6 +74,6 @@ test.describe('Focus Page', () => {
 
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText('Můj fokus')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Můj fokus' })).toBeVisible({ timeout: 10000 });
   });
 });
