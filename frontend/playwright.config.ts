@@ -10,13 +10,15 @@ export default defineConfig({
   timeout: 30000,
   use: {
     baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     actionTimeout: 10000,
   },
   projects: [
     { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
+    ...(process.env.CI ? [] : [
+      { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+      { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
+    ]),
   ],
   webServer: {
     command: 'npm run dev',
