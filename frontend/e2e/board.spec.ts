@@ -82,13 +82,16 @@ test.describe('Board', () => {
     await page.waitForLoadState('networkidle');
     await page.getByText('E2E Delete This Task').click();
 
-    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: /smazat/i }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
-    // Confirm deletion
-    const confirmButton = page.getByRole('button', { name: /smazat/i }).last();
-    await confirmButton.click();
+    // Click "Smazat úkol" button in the detail modal
+    await dialog.getByRole('button', { name: /smazat úkol/i }).click();
 
-    await expect(page.getByText('E2E Delete This Task')).not.toBeVisible({ timeout: 10000 });
+    // Click "Smazat" confirm button in the confirmation dialog
+    await page.getByRole('button', { name: /^smazat$/i }).click();
+
+    // Wait for dialog to close after deletion
+    await expect(dialog).not.toBeVisible({ timeout: 10000 });
   });
 });

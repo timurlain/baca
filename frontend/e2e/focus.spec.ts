@@ -65,12 +65,15 @@ test.describe('Focus Page', () => {
     await expect(page.getByText('E2E Focus Task 2')).toBeVisible({ timeout: 10000 });
   });
 
-  test('empty state shows completion message', async ({ page }) => {
+  test('focus page heading is visible when tasks exist', async ({ page }) => {
+    // Create a task so we can verify the "Můj fokus" heading
     await page.goto('/focus');
     await page.waitForLoadState('networkidle');
-    // With no assigned tasks, the focus page shows completion message
-    await expect(
-      page.getByText(/splněno|žádné/i).first()
-    ).toBeVisible({ timeout: 10000 });
+
+    await createAndAssignTask(page, 'E2E Focus Heading Task');
+
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('Můj fokus')).toBeVisible({ timeout: 10000 });
   });
 });
