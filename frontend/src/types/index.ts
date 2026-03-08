@@ -207,6 +207,14 @@ export interface AuthResponse {
 }
 
 // Voice
+export interface TranscriptionResult {
+  transcription: string;
+}
+
+export interface VoiceParseRequest {
+  transcription: string;
+}
+
 export interface VoiceParseResponse {
   title: string | null;
   description: string | null;
