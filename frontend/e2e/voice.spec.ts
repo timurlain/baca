@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 async function loginAsAdmin(page: Page) {
-  await page.request.post('http://localhost:5000/api/test/login/admin@baca.local');
+  await page.request.post('/api/test/login/admin@baca.local');
 }
 
 function mockMediaRecorder(page: Page) {

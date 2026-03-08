@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 async function loginAsAdmin(page: Page) {
-  await page.request.post('http://localhost:5000/api/test/login/admin@baca.local');
+  await page.request.post('/api/test/login/admin@baca.local');
 }
 
 test.describe('Authentication', () => {
@@ -32,7 +32,7 @@ test.describe('Authentication', () => {
   });
 
   test('guest login with PIN succeeds as read-only', async ({ page }) => {
-    await page.request.post('http://localhost:5000/api/auth/guest', {
+    await page.request.post('/api/auth/guest', {
       data: { pin: 'ovcina2026' },
     });
     await page.goto('/');

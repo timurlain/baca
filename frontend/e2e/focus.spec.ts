@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 test.use({ viewport: { width: 375, height: 812 } });
 
 async function loginAsAdmin(page: Page) {
-  await page.request.post('http://localhost:5000/api/test/login/admin@baca.local');
+  await page.request.post('/api/test/login/admin@baca.local');
 }
 
 async function createAndAssignTask(page: Page, title: string, priority = 'High') {
