@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@theme {
+  /* App theme */
+  --color-forest-600: #166534;
+  --color-forest-700: #15803d;
+  --color-forest-800: #14532d;
+  --color-forest-100: #dcfce7;
+  --color-forest-50: #f0fdf4;
+  --color-forest-200: #bbf7d0;
+
+  /* Status colors */
+  --color-status-idea: #9CA3AF;
+  --color-status-open: #3B82F6;
+  --color-status-inprogress: #F59E0B;
+  --color-status-forreview: #8B5CF6;
+  --color-status-done: #10B981;
+
+  /* Font */
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
