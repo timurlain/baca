@@ -8,25 +8,145 @@ on:
 
 jobs:
   backend-build:
+    name: Backend Build & Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: baca_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet restore
-        working-directory: backend
-      - run: dotnet build --no-restore
+
+      - name: Restore
+        run: dotnet restore
         working-directory: backend
 
+      - name: Build (warnings as errors)
+        run: dotnet build --no-restore --warnaserror
+        working-directory: backend
+
+      - name: Unit Tests
+        run: dotnet test --no-build --verbosity normal --filter "FullyQualifiedName~Baca.Api.Tests"
+        working-directory: backend
+
+      - name: Integration Tests
+        run: dotnet test --no-build --verbosity normal --filter "FullyQualifiedName~Baca.Api.IntegrationTests"
+        working-directory: backend
+        env:
+          ConnectionStrings__Default: "Host=localhost;Database=baca_test;Username=test;Password=test"
+
   frontend-build:
+    name: Frontend Build & Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm ci
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
         working-directory: frontend
-      - run: npm run build
+
+      - name: Lint
+        run: npm run lint
         working-directory: frontend
+
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+
+      - name: Unit Tests
+        run: npm run test -- --run
+        working-directory: frontend
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: baca
+          POSTGRES_USER: baca_admin
+          POSTGRES_PASSWORD: dev_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build backend
+        run: dotnet build
+        working-directory: backend
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+        working-directory: frontend
+
+      - name: Start backend
+        run: dotnet run --project Baca.Api --no-build &
+        working-directory: backend
+        env:
+          ASPNETCORE_URLS: http://localhost:5000
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Default: "Host=localhost;Database=baca;Username=baca_admin;Password=dev_password"
+
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:5000/api/health && break
+            sleep 2
+          done
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        working-directory: frontend
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14

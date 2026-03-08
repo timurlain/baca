@@ -53,8 +53,8 @@ describe('Dashboard', () => {
       http.get('/api/dashboard', () => HttpResponse.json(fullMock)),
     );
     renderDashboard();
-    expect(await screen.findByText(/Otevřený: 3/)).toBeInTheDocument();
-    expect(screen.getByText(/Rozpracovaný: 2/)).toBeInTheDocument();
+    expect(await screen.findByText(/Otevřeno: 3/)).toBeInTheDocument();
+    expect(screen.getByText(/V řešení: 2/)).toBeInTheDocument();
     expect(screen.getByText(/Hotovo: 5/)).toBeInTheDocument();
   });
 

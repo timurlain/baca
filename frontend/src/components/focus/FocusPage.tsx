@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useFocus } from '@/hooks/useFocus';
-import { tasks as tasksApi } from '@/api/client';
+import useOfflineFocus from '@/hooks/useOfflineFocus';
 import type { TaskStatus } from '@/types';
 import { formatDate, isOverdue, cn } from '@/utils/helpers';
 import Badge from '../shared/Badge';
@@ -8,15 +7,14 @@ import TaskDetailModal from '../board/TaskDetailModal';
 import { Link } from 'react-router-dom';
 
 export default function FocusPage() {
-  const { tasks, loading, error, refresh } = useFocus();
+  const { focusTasks: tasks, loading, error, changeStatus, refresh } = useOfflineFocus();
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const handleStatusChange = async (taskId: number, newStatus: TaskStatus) => {
     setUpdatingId(taskId);
     try {
-      await tasksApi.changeStatus(taskId, { status: newStatus });
-      await refresh();
+      await changeStatus(taskId, { status: newStatus });
     } catch (err) {
       console.error('Failed to update status:', err);
     } finally {

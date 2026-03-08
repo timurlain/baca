@@ -35,8 +35,8 @@ describe('UserManagement', () => {
     render(<UserManagement />);
     expect(await screen.findByText('Tomáš')).toBeInTheDocument();
     expect(screen.getByText('Jana')).toBeInTheDocument();
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-    expect(screen.getByText('Uživatel')).toBeInTheDocument();
+    expect(screen.getByText('Administrátor')).toBeInTheDocument();
+    expect(screen.getByText('Organizátor')).toBeInTheDocument();
   });
 
   it('add user form submits correctly', async () => {
