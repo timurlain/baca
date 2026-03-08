@@ -45,7 +45,7 @@ function ResponsiveHome() {
 // Auth context — single auth.me() call shared across the app (Agent D's fix for duplicate calls)
 const AuthContext = createContext<{ user: AuthResponse | null; loading: boolean }>({ user: null, loading: true });
 
-export function useAuthContext() {
+function useAuthContext() {
   return useContext(AuthContext);
 }
 

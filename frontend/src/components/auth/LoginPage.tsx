@@ -19,7 +19,7 @@ export default function LoginPage() {
     try {
       await login(email);
       setMessage({ type: 'success', text: 'Odkaz k přihlášení byl odeslán na váš email.' });
-    } catch (err) {
+    } catch {
       setMessage({ type: 'error', text: 'Nepodařilo se odeslat email. Zkontrolujte adresu.' });
     } finally {
       setLoading(false);
@@ -35,7 +35,7 @@ export default function LoginPage() {
     try {
       await guestLogin(pin);
       // useAuth hook handles the state, parent AuthGuard will redirect
-    } catch (err) {
+    } catch {
       setMessage({ type: 'error', text: 'Nesprávný PIN.' });
     } finally {
       setLoading(false);

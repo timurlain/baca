@@ -9,10 +9,10 @@ function mockMediaRecorder(page: Page) {
     // Mock MediaRecorder API
     class MockMediaRecorder {
       state = 'inactive';
-      ondataavailable: ((event: any) => void) | null = null;
+      ondataavailable: ((event: { data: Blob }) => void) | null = null;
       onstop: (() => void) | null = null;
       onstart: (() => void) | null = null;
-      onerror: ((event: any) => void) | null = null;
+      onerror: ((event: Event) => void) | null = null;
 
       static isTypeSupported() {
         return true;
@@ -41,7 +41,7 @@ function mockMediaRecorder(page: Page) {
         this.state = 'recording';
       }
 
-      addEventListener(event: string, handler: any) {
+      addEventListener(event: string, handler: (() => void) | ((event: { data: Blob }) => void)) {
         if (event === 'dataavailable') this.ondataavailable = handler;
         if (event === 'stop') this.onstop = handler;
         if (event === 'start') this.onstart = handler;
@@ -51,11 +51,13 @@ function mockMediaRecorder(page: Page) {
       removeEventListener() {}
     }
 
-    (window as any).MediaRecorder = MockMediaRecorder;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as unknown as Record<string, any>).MediaRecorder = MockMediaRecorder;
 
     // Mock getUserMedia
     if (!navigator.mediaDevices) {
-      (navigator as any).mediaDevices = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (navigator as unknown as Record<string, any>).mediaDevices = {};
     }
     navigator.mediaDevices.getUserMedia = async () => {
       return new MediaStream();

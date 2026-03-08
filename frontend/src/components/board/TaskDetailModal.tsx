@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { TaskDetail, TaskStatus, Priority, User, Category } from '@/types';
 import { UserRole } from '@/types';
 import { tasks as tasksApi, categories as categoriesApi, users as usersApi } from '@/api/client';
@@ -24,13 +24,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   const [isDeleting, setIsDeleting] = useState(false);
   const isGuest = user?.role === UserRole.Guest;
 
-  useEffect(() => {
-    if (isOpen && taskId) {
-      fetchData();
-    }
-  }, [isOpen, taskId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [detail, usersData, categoriesData] = await Promise.all([
@@ -46,7 +40,13 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
     } finally {
       setLoading(false);
     }
-  };
+  }, [taskId]);
+
+  useEffect(() => {
+    if (isOpen && taskId) {
+      fetchData();
+    }
+  }, [isOpen, taskId, fetchData]);
 
   const handleUpdate = async (patch: Partial<TaskDetail>) => {
     if (isGuest) return;
