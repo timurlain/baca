@@ -1,0 +1,55 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.vs/
+.vs/
+*.DotSettings.user
+
+# NuGet
+*.nupkg
+packages/
+
+# Frontend
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Test results
+TestResults/
+coverage/
+playwright-report/
+test-results/
+
+# Docker
+docker-compose.override.yml
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets
+**/appsettings.Development.json
+**/appsettings.Local.json
