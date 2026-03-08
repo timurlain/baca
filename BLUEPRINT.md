@@ -18,12 +18,19 @@ Agenti by měli používat tyto Tissaia skills kde je to relevantní:
 
 | Skill | Kde použít | Proč |
 |-------|-----------|------|
-| **`tinkerer`** | Agents A, B, C, D (Phase 1) | Obecný implementační agent. Sleduje plány, matchuje existující patterny, buildí často, píše základní testy, eskaluje architekturní rozhodnutí. |
+| **`tinkerer-baca`** | Agents A, B, C, D (Phase 1) | Bača-specific implementační agent. .NET 10 Minimal API, React/TS/Vite/Tailwind, EF Core + PostgreSQL, strict nullable + TreatWarningsAsErrors. Extends base tinkerer. |
 | **`inquisitor`** | Phase 2 (Integration), Phase 3 (Hardening) | Code review agent. 6 dimenzí review: security, correctness, error handling, performance, maintainability, readability. Severity-ranked findings. |
 
 Každý agent prompt v Části 2 uvádí, které skills má agent použít.
 
-> **Instalace skills:** V Claude Code terminálu spusť `/tissaia install tinkerer` a `/tissaia install inquisitor`.
+> **Instalace skills:** V Claude Code terminálu spusť `/tissaia install tinkerer-baca` a `/tissaia install inquisitor`.
+
+> **Externí pluginy** (tinkerer-baca je automaticky požaduje, ale pro jistotu):
+> ```
+> /plugin marketplace add codewithmukesh/dotnet-claude-kit
+> /plugin install dotnet-claude-kit
+> /plugin marketplace add obra/superpowers-marketplace
+> ```
 
 ---
 ---
@@ -67,7 +74,7 @@ Tyto příkazy agenti používají neustále. Musí fungovat v každé fázi:
 # Backend
 cd backend
 dotnet restore                          # obnoví NuGet balíčky
-dotnet build --no-restore               # kompilace
+dotnet build --no-restore --warnaserror # kompilace, ZERO warnings
 dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"  # testy + coverage
 dotnet ef migrations add <Name>         # nová migrace
 dotnet ef database update               # aplikuj migrace na DB
@@ -100,11 +107,38 @@ gh run view <id>                        # detail CI runu
 
 ## Code Style
 
-### Backend (C#)
+### Backend (C#) — Compiler Strictness (MANDATORY)
+
+**Directory.Build.props** (v `backend/`, dědí všechny 3 projekty):
+
+```xml
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>9999</WarningLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+</Project>
+```
+
+**Zero warnings policy:** `dotnet build --warnaserror` MUSÍ projít po každé změně. Opravit warningy PŘED commitem. Nikdy nesuppressovat přes `#pragma`.
+
+**Nullable pravidla:**
+- Každá reference-type property MUSÍ být inicializovaná nebo označená `?`
+- Používej `required` pro povinná pole: `public required string Name { get; set; }`
+- EF navigace na required FK: `= null!` s komentářem `// EF Core populates`
+- EF navigace na optional FK: `public User? Assignee { get; set; }`
+- Kolekce vždy inicializované: `public List<Comment> Comments { get; set; } = []`
+- NIKDY nepoužívat `!` nebo `#pragma` kromě EF required navigací
+
+### Backend (C#) — Naming & Patterns
 - **Naming**: PascalCase pro třídy, metody, properties. camelCase pro lokální proměnky a parametry.
 - **Soubory**: jeden typ na soubor, jméno souboru = jméno třídy.
 - **Async**: všechny I/O operace async, suffix `Async` na metodách.
-- **Nullable**: `<Nullable>enable</Nullable>`, explicitní null checking.
 - **Formátování**: `dotnet format` standard (výchozí .editorconfig).
 
 ```csharp
@@ -1638,7 +1672,7 @@ You are implementing the core backend logic for "Bača" — a task tracker web a
 
 ## Tissaia Skill
 
-Use the **`tinkerer`** skill as your working methodology: `/tissaia install tinkerer`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
+Use the **`tinkerer-baca`** skill as your working methodology: `/tissaia install tinkerer-baca`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
 
 ## Project Spec
 
@@ -1791,7 +1825,7 @@ You are implementing the backend services and admin endpoints for "Bača" — a 
 
 ## Tissaia Skill
 
-Use the **`tinkerer`** skill as your working methodology: `/tissaia install tinkerer`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
+Use the **`tinkerer-baca`** skill as your working methodology: `/tissaia install tinkerer-baca`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
 
 ## Project Spec
 
@@ -1956,7 +1990,7 @@ You are implementing the core frontend UI for "Bača" — a task tracker web app
 
 ## Tissaia Skill
 
-Use the **`tinkerer`** skill as your working methodology: `/tissaia install tinkerer`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
+Use the **`tinkerer-baca`** skill as your working methodology: `/tissaia install tinkerer-baca`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
 
 ## Project Spec
 
@@ -2165,7 +2199,7 @@ You are implementing the advanced frontend features for "Bača" — a task track
 
 ## Tissaia Skill
 
-Use the **`tinkerer`** skill as your working methodology: `/tissaia install tinkerer`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
+Use the **`tinkerer-baca`** skill as your working methodology: `/tissaia install tinkerer-baca`. Follow its workflow — read existing code, match patterns, build frequently, write basic tests, escalate architectural decisions.
 
 ## Project Spec
 
@@ -2537,7 +2571,7 @@ You are the User Guide agent for "Bača" — a task tracker app for organizing a
 
 ## Tissaia Skill
 
-Use the **`tinkerer`** skill for implementation: `/tissaia install tinkerer`.
+Use the **`tinkerer-baca`** skill for implementation: `/tissaia install tinkerer-baca`.
 
 ## Philosophy: LESS IS MORE
 
