@@ -1,3 +1,5 @@
+using Baca.Api.DTOs;
+
 namespace Baca.Api.Endpoints;
 
 public static class VoiceEndpoints
@@ -9,7 +11,7 @@ public static class VoiceEndpoints
         group.MapPost("/transcribe", (HttpRequest request) =>
             Results.StatusCode(501));
 
-        group.MapPost("/parse", (HttpRequest request) =>
+        group.MapPost("/parse", (VoiceParseRequest request) =>
             Results.StatusCode(501));
     }
 }
