@@ -9,6 +9,7 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     user: { name: 'Test User', avatarColor: '#00ff00', role: UserRole.User },
     loading: false,
+    logout: vi.fn(),
   }),
 }));
 
@@ -54,6 +55,6 @@ describe('Header', () => {
         <Header />
       </BrowserRouter>
     );
-    expect(screen.getAllByText('TU')).toHaveLength(2); // One for desktop, one for mobile
+    expect(screen.getByText('TU')).toBeInTheDocument();
   });
 });
