@@ -27,6 +27,7 @@ interface TaskFormProps {
   confidence?: FieldConfidence;
   onSubmit: (req: CreateTaskRequest) => Promise<void>;
   submitLabel?: string;
+  submittingLabel?: string;
   idPrefix?: string;
 }
 
@@ -50,6 +51,7 @@ export default function TaskForm({
   confidence,
   onSubmit,
   submitLabel = 'Uložit úkol',
+  submittingLabel = 'Ukládání...',
   idPrefix = 'tf',
 }: TaskFormProps) {
   const [title, setTitle] = useState(initialValues?.title ?? '');
@@ -217,7 +219,7 @@ export default function TaskForm({
         disabled={saving}
         className="w-full bg-forest-700 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-forest-800 disabled:opacity-50"
       >
-        {saving ? 'Ukládání...' : submitLabel}
+        {saving ? submittingLabel : submitLabel}
       </button>
     </form>
   );
