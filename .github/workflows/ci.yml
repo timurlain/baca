@@ -192,12 +192,18 @@ jobs:
 
       - name: Sync secrets to baca-api
         run: |
-          az containerapp secret set -n baca-api -g ovcina \
-            --secrets "anthropic-key=${{ secrets.ANTHROPICAPI }}" \
-            --output none 2>/dev/null || true
-          az containerapp update -n baca-api -g ovcina \
-            --set-env-vars "Anthropic__ApiKey=secretref:anthropic-key" \
-            --output none
+          if [ -n "$ANTHROPIC_KEY" ]; then
+            az containerapp secret set -n baca-api -g ovcina \
+              --secrets "anthropic-key=$ANTHROPIC_KEY" \
+              --output none
+            az containerapp update -n baca-api -g ovcina \
+              --set-env-vars "Anthropic__ApiKey=secretref:anthropic-key" \
+              --output none
+          else
+            echo "ANTHROPICAPI secret not configured, skipping"
+          fi
+        env:
+          ANTHROPIC_KEY: ${{ secrets.ANTHROPICAPI }}
 
       - name: Deploy backend
         uses: azure/container-apps-deploy-action@v2
