@@ -55,7 +55,7 @@ Webová aplikace pro organizaci LARP hry **Ovčina** (30. ročník, 1.–3. kvě
 | Styling | Tailwind CSS |
 | Offline | Service Worker (Workbox) + IndexedDB (idb) |
 | Auth | Magic link (email token) + shared guest PIN |
-| Email | SMTP (konfigurovatelné — Mailgun, SendGrid, vlastní SMTP) |
+| Email | Azure Communication Services (shared `ovcina-comms` resource) |
 | Speech-to-Text | Azure Speech Services (cs-CZ) |
 | Task Parsing LLM | Claude Haiku 4.5 (Anthropic API) |
 | Notifikace | Twilio WhatsApp API (1:1 zprávy při přiřazení úkolu) |
@@ -654,7 +654,7 @@ baca/
 │   ├── Baca.Api/
 │   │   ├── Program.cs                  # Minimal API setup, middleware, DI
 │   │   ├── Baca.Api.csproj
-│   │   ├── appsettings.json            # ConnectionString, SMTP config, JWT secret
+│   │   ├── appsettings.json            # ConnectionString, AzureCommunication, Auth secret
 │   │   │
 │   │   ├── Data/
 │   │   │   ├── BacaDbContext.cs
@@ -883,8 +883,8 @@ services:
       - "5000:8080"
     environment:
       - ConnectionStrings__Default=Host=db;Database=baca;Username=baca_admin;Password=dev_password
-      - Smtp__Host=mailhog
-      - Smtp__Port=1025
+      - AzureCommunication__ConnectionString=${AZURE_COMMUNICATION_CONNECTION_STRING}
+      - AzureCommunication__SenderAddress=DoNotReply@7feb2a55-415c-4bbc-8cda-99a62cfb5ae8.azurecomm.net
       - Auth__Secret=dev-secret-min-32-chars-long-here
       - App__BaseUrl=http://localhost:3000
       - Azure__Speech__Key=${AZURE_SPEECH_KEY}
@@ -903,12 +903,6 @@ services:
       - "3000:80"
     depends_on:
       - backend
-
-  mailhog:
-    image: mailhog/mailhog
-    ports:
-      - "8025:8025"    # Web UI pro testování emailů
-      - "1025:1025"
 
 volumes:
   pgdata:
@@ -1806,7 +1800,7 @@ Read the full specification from: baca-project-spec.md
 
 ## IMPORTANT:
 - When calling IWhatsAppNotificationService.NotifyTaskAssigned(), just call the interface method. Agent B will provide the implementation. For tests, mock it.
-- When calling IEmailService.SendMagicLink(), implement a real SMTP sender using the config from appsettings. For tests, mock it.
+- When calling IEmailService.SendMagicLink(), use Azure Communication Services SDK (Azure.Communication.Email). Connection string from AzureCommunication:ConnectionString config. For tests, mock it.
 - Use BCrypt.Net-Next for password/PIN hashing (add NuGet if not present).
 ```
 
