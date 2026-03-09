@@ -128,5 +128,21 @@ public sealed class VoiceEndpointTests
                 RawTranscription = transcription
             });
         }
+
+        public Task<BulkParseResponse> ParseBulkTextAsync(string text, CancellationToken ct = default)
+        {
+            return Task.FromResult(new BulkParseResponse
+            {
+                Tasks =
+                [
+                    new VoiceParseResponse
+                    {
+                        Title = "Koupit lano",
+                        Status = TaskItemStatus.Open,
+                        RawTranscription = text
+                    }
+                ]
+            });
+        }
     }
 }

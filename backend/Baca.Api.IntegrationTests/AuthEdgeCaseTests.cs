@@ -155,5 +155,21 @@ public sealed class AuthEdgeCaseTests
                 RawTranscription = transcription
             });
         }
+
+        public Task<BulkParseResponse> ParseBulkTextAsync(string text, CancellationToken ct = default)
+        {
+            return Task.FromResult(new BulkParseResponse
+            {
+                Tasks =
+                [
+                    new VoiceParseResponse
+                    {
+                        Title = text,
+                        Status = TaskItemStatus.Open,
+                        RawTranscription = text
+                    }
+                ]
+            });
+        }
     }
 }

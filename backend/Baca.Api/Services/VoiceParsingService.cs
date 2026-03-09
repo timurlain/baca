@@ -52,6 +52,37 @@ public sealed class VoiceParsingService(
         Odpověz POUZE validním JSON, bez dalšího textu.
         """;
 
+    private const string BulkSystemPrompt =
+        """
+        Jsi asistent pro parsování textově zadaných úkolů v českém jazyce.
+        Dostaneš textový vstup a seznam existujících uživatelů a kategorií.
+        Tvým úkolem je extrahovat strukturovaná data pro vytvoření úkolů.
+
+        Vstup může být: tabulka z Excelu, odrážkový seznam, poznámky z porady, nebo volný text.
+        Vstup může obsahovat jeden nebo více úkolů — vrať JSON POLE objektů.
+
+        Pravidla pro každý úkol:
+        - Title: stručný, akční popis úkolu (max 100 znaků). Odstraň zbytečná slova.
+        - Assignee: porovnej jméno z textu se seznamem uživatelů. Fuzzy match
+          (Honzík → Honza, Peťa → Petr). Pokud nenajdeš shodu, nech null.
+        - Category: porovnej s existujícími kategoriemi. Klíčová slova:
+          jídlo/vaření/kuchyň → Jídlo, lano/stan/materiál → Logistika, atd.
+        - Priority: "urgentní/důležité/asap/hned" → High, "když bude čas/někdy/nice to have"
+          → Low, jinak Medium.
+        - DueDate: relativní výrazy ("do pátku", "příští týden", "do konce dubna")
+          převeď na ISO datum. Dnešní datum dostaneš v kontextu.
+        - Status: vždy "Open" pokud není řečeno jinak.
+        - Description: cokoliv navíc co se nevešlo do title.
+
+        Pro každé pole vrať confidence (0.0–1.0):
+        - 1.0 = explicitně řečeno
+        - 0.7–0.9 = odvozeno s vysokou jistotou
+        - 0.3–0.6 = hádání, fuzzy match
+        - 0.0 = nebylo zmíněno, default hodnota
+
+        Odpověz POUZE validním JSON POLEM objektů, bez dalšího textu.
+        """;
+
     public async Task<VoiceParseResponse> ParseTranscriptionAsync(string transcription, CancellationToken ct = default)
     {
         var activeUsers = await dbContext.Users
@@ -144,6 +175,105 @@ public sealed class VoiceParsingService(
         return parsedResponse;
     }
 
+    public async Task<BulkParseResponse> ParseBulkTextAsync(string text, CancellationToken ct = default)
+    {
+        var activeUsers = await dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.IsActive)
+            .OrderBy(user => user.Name)
+            .Select(user => new LookupItem(user.Id, user.Name))
+            .ToListAsync(ct);
+
+        var categories = await dbContext.Categories
+            .AsNoTracking()
+            .OrderBy(category => category.SortOrder)
+            .ThenBy(category => category.Name)
+            .Select(category => new LookupItem(category.Id, category.Name))
+            .ToListAsync(ct);
+
+        var payload = new AnthropicRequest(
+            Model: configuration["Anthropic:Model"] ?? configuration["Anthropic__Model"] ?? "claude-3-5-haiku-latest",
+            MaxTokens: 4000,
+            System: BulkSystemPrompt,
+            Messages:
+            [
+                new AnthropicMessage(
+                    "user",
+                    BuildBulkUserPrompt(text, activeUsers, categories))
+            ]);
+
+        var apiKey = configuration["Anthropic:ApiKey"]
+            ?? configuration["Anthropic__ApiKey"]
+            ?? throw new InvalidOperationException("Anthropic API key is not configured.");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages")
+        {
+            Content = JsonContent.Create(payload, options: SerializerOptions)
+        };
+        request.Headers.Add("x-api-key", apiKey);
+        request.Headers.Add("anthropic-version", AnthropicVersion);
+
+        using var response = await httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException(
+                $"Anthropic API call failed with status {(int)response.StatusCode}: {errorBody}");
+        }
+
+        var responsePayload = await response.Content.ReadFromJsonAsync<AnthropicResponse>(SerializerOptions, ct);
+        var textPayload = responsePayload?.Content
+            .FirstOrDefault(block => string.Equals(block.Type, "text", StringComparison.OrdinalIgnoreCase))
+            ?.Text;
+
+        if (string.IsNullOrWhiteSpace(textPayload))
+        {
+            return new BulkParseResponse { Tasks = [CreateFallbackResponse(text)] };
+        }
+
+        var rawTasks = TryParseBulkResponse(textPayload, text);
+        var parsedTasks = new List<VoiceParseResponse>(rawTasks.Count);
+
+        foreach (var parsedResponse in rawTasks)
+        {
+            ApplyLookupMatch(
+                parsedResponse.AssigneeName,
+                activeUsers,
+                static (responseData, match) =>
+                {
+                    responseData.AssigneeId = match?.Id;
+                    responseData.AssigneeConfidence = match is null
+                        ? Math.Min(responseData.AssigneeConfidence ?? 0.3, 0.3)
+                        : Math.Max(responseData.AssigneeConfidence ?? 0, match.Confidence);
+                },
+                parsedResponse);
+
+            ApplyLookupMatch(
+                parsedResponse.CategoryName,
+                categories,
+                static (responseData, match) =>
+                {
+                    responseData.CategoryId = match?.Id;
+                    responseData.CategoryConfidence = match is null
+                        ? Math.Min(responseData.CategoryConfidence ?? 0.3, 0.3)
+                        : Math.Max(responseData.CategoryConfidence ?? 0, match.Confidence);
+                },
+                parsedResponse);
+
+            parsedResponse.RawTranscription = text;
+            parsedResponse.Status = parsedResponse.Status == 0 ? TaskItemStatus.Open : parsedResponse.Status;
+            parsedResponse.Title = parsedResponse.Title?.Trim();
+            if (parsedResponse.Title?.Length > 100)
+            {
+                parsedResponse.Title = parsedResponse.Title[..100];
+            }
+
+            parsedTasks.Add(parsedResponse);
+        }
+
+        return new BulkParseResponse { Tasks = parsedTasks };
+    }
+
     private string BuildUserPrompt(
         string transcription,
         IReadOnlyList<LookupItem> users,
@@ -162,6 +292,27 @@ public sealed class VoiceParsingService(
 
               Přepis hlasového vstupu:
               "{{transcription}}"
+              """;
+    }
+
+    private string BuildBulkUserPrompt(
+        string text,
+        IReadOnlyList<LookupItem> users,
+        IReadOnlyList<LookupItem> categories)
+    {
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        return
+            $$"""
+              Dnešní datum: {{today}}
+
+              Existující uživatelé:
+              {{JsonSerializer.Serialize(users, SerializerOptions)}}
+
+              Existující kategorie:
+              {{JsonSerializer.Serialize(categories, SerializerOptions)}}
+
+              Text ke zpracování:
+              "{{text}}"
               """;
     }
 
@@ -197,6 +348,46 @@ public sealed class VoiceParsingService(
         {
             return CreateFallbackResponse(transcription);
         }
+    }
+
+    private static List<VoiceParseResponse> TryParseBulkResponse(string textPayload, string text)
+    {
+        var normalizedPayload = ExtractJson(textPayload);
+
+        try
+        {
+            var rawList = JsonSerializer.Deserialize<List<RawVoiceParseResponse>>(normalizedPayload, SerializerOptions);
+            if (rawList is { Count: > 0 })
+            {
+                return rawList.ConvertAll(raw => new VoiceParseResponse
+                {
+                    Title = raw.Title,
+                    Description = raw.Description,
+                    AssigneeName = raw.AssigneeName,
+                    AssigneeConfidence = raw.AssigneeConfidence,
+                    CategoryName = raw.CategoryName,
+                    CategoryConfidence = raw.CategoryConfidence,
+                    Priority = ParsePriority(raw.Priority),
+                    PriorityConfidence = raw.PriorityConfidence,
+                    DueDate = raw.DueDate,
+                    DueDateConfidence = raw.DueDateConfidence,
+                    Status = ParseStatus(raw.Status),
+                    RawTranscription = text
+                });
+            }
+        }
+        catch (JsonException)
+        {
+            // Array parsing failed, try single object
+        }
+
+        var singleResult = TryParseResponse(normalizedPayload, text);
+        if (singleResult.Title is not null)
+        {
+            return [singleResult];
+        }
+
+        return [];
     }
 
     private static void ApplyLookupMatch(
@@ -315,11 +506,13 @@ public sealed class VoiceParsingService(
         var trimmedPayload = textPayload.Trim();
         if (trimmedPayload.StartsWith("```", StringComparison.Ordinal))
         {
-            var firstBrace = trimmedPayload.IndexOf('{');
+            var firstJsonChar = trimmedPayload.IndexOfAny(['{', '[']);
             var lastBrace = trimmedPayload.LastIndexOf('}');
-            if (firstBrace >= 0 && lastBrace > firstBrace)
+            var lastBracket = trimmedPayload.LastIndexOf(']');
+            var lastJsonChar = Math.Max(lastBrace, lastBracket);
+            if (firstJsonChar >= 0 && lastJsonChar > firstJsonChar)
             {
-                return trimmedPayload[firstBrace..(lastBrace + 1)];
+                return trimmedPayload[firstJsonChar..(lastJsonChar + 1)];
             }
         }
 

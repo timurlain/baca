@@ -12,6 +12,8 @@ public static class VoiceEndpoints
         group.MapPost("/transcribe", TranscribeAsync);
 
         group.MapPost("/parse", ParseAsync);
+
+        group.MapPost("/parse-bulk", ParseBulkAsync);
     }
 
     private static async Task<IResult> TranscribeAsync(
@@ -58,6 +60,26 @@ public static class VoiceEndpoints
         }
 
         var response = await voiceParsingService.ParseTranscriptionAsync(request.Transcription.Trim(), ct);
+        return TypedResults.Ok(response);
+    }
+
+    private static async Task<IResult> ParseBulkAsync(
+        HttpContext httpContext,
+        IVoiceParsingService voiceParsingService,
+        BulkParseRequest request,
+        CancellationToken ct)
+    {
+        if (!EndpointIdentity.IsMember(httpContext))
+        {
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Text))
+        {
+            return Results.BadRequest("Text is required.");
+        }
+
+        var response = await voiceParsingService.ParseBulkTextAsync(request.Text.Trim(), ct);
         return TypedResults.Ok(response);
     }
 }
