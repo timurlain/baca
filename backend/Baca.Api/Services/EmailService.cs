@@ -1,4 +1,5 @@
-using System.Net.Mail;
+using Azure;
+using Azure.Communication.Email;
 
 namespace Baca.Api.Services;
 
@@ -15,25 +16,25 @@ public partial class EmailService : IEmailService
 
     public async Task SendMagicLinkAsync(string email, string name, string token, CancellationToken ct)
     {
-        var smtpHost = _config["Smtp:Host"] ?? "localhost";
-        var smtpPort = int.Parse(_config["Smtp:Port"] ?? "1025", System.Globalization.CultureInfo.InvariantCulture);
-        var fromEmail = _config["Smtp:FromEmail"] ?? "noreply@baca.local";
-        var fromName = _config["Smtp:FromName"] ?? "Bača";
+        var connectionString = _config["AzureCommunication:ConnectionString"]
+            ?? throw new InvalidOperationException("AzureCommunication:ConnectionString not configured");
+        var senderAddress = _config["AzureCommunication:SenderAddress"]
+            ?? "DoNotReply@7feb2a55-415c-4bbc-8cda-99a62cfb5ae8.azurecomm.net";
         var baseUrl = _config["App:BaseUrl"] ?? "http://localhost:3000";
 
         var link = $"{baseUrl}/auth/verify/{token}";
 
-        using var client = new SmtpClient(smtpHost, smtpPort);
-        using var message = new MailMessage
-        {
-            From = new MailAddress(fromEmail, fromName),
-            Subject = "Přihlášení do Bača",
-            Body = $"Ahoj {name},\n\nPro přihlášení klikni na: {link}\n\nOdkaz vyprší za 15 minut.\n\nBača",
-            IsBodyHtml = false
-        };
-        message.To.Add(email);
+        var client = new EmailClient(connectionString);
 
-        await client.SendMailAsync(message, ct);
+        var emailMessage = new EmailMessage(
+            senderAddress: senderAddress,
+            recipientAddress: email,
+            content: new EmailContent("Přihlášení do Bača")
+            {
+                PlainText = $"Ahoj {name},\n\nPro přihlášení klikni na: {link}\n\nOdkaz vyprší za 15 minut.\n\nBača"
+            });
+
+        await client.SendAsync(WaitUntil.Started, emailMessage, ct);
         LogMagicLinkSent(email);
     }
 
