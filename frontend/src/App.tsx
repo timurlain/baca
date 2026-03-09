@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { auth } from '@/api/client';
 import type { AuthResponse } from '@/types';
 import { UserRole } from '@/types';
+import { AuthContext, useAuthContext } from '@/context/AuthContext';
 
 // Layout (Agent C)
 import Layout from '@/components/layout/Layout';
@@ -28,25 +29,23 @@ import CategoryManagement from '@/components/admin/CategoryManagement';
 import GameRoleManagement from '@/components/admin/GameRoleManagement';
 import Settings from '@/components/admin/Settings';
 
+// Guide (Phase 2b)
+import GuidePage from '@/components/guide/GuidePage';
+import GuideWelcome from '@/components/guide/GuideWelcome';
+import GuideBoard from '@/components/guide/GuideBoard';
+import GuideFocus from '@/components/guide/GuideFocus';
+import GuideVoice from '@/components/guide/GuideVoice';
+import GuideAdmin from '@/components/guide/GuideAdmin';
+import GuideOffline from '@/components/guide/GuideOffline';
+
 // Offline (Agent D)
 import OfflineIndicator from '@/offline/offlineIndicator';
-
-function Placeholder({ name }: { name: string }) {
-  return <div className="p-8 text-center text-gray-600">Stránka: {name} — Zatím neimplementováno</div>;
-}
 
 function ResponsiveHome() {
   const isMobile = window.innerWidth < 768;
   return isMobile
     ? <FocusPage />
     : <Dashboard />;
-}
-
-// Auth context — single auth.me() call shared across the app (Agent D's fix for duplicate calls)
-const AuthContext = createContext<{ user: AuthResponse | null; loading: boolean }>({ user: null, loading: true });
-
-export function useAuthContext() {
-  return useContext(AuthContext);
 }
 
 function AuthProvider({ children }: { children: ReactNode }) {
@@ -100,6 +99,7 @@ function AuthenticatedApp() {
 
         {/* Home — mobile: Focus, desktop: Dashboard */}
         <Route path="/" element={<AuthGuard><ResponsiveHome /></AuthGuard>} />
+        <Route path="/focus" element={<AuthGuard><FocusPage /></AuthGuard>} />
         <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
 
         {/* Board (Agent C) */}
@@ -116,12 +116,14 @@ function AuthenticatedApp() {
         <Route path="/admin/settings" element={<AuthGuard><Settings /></AuthGuard>} />
 
         {/* Guide (Phase 2b) */}
-        <Route path="/guide" element={<AuthGuard><Placeholder name="Příručka" /></AuthGuard>} />
-        <Route path="/guide/board" element={<AuthGuard><Placeholder name="Příručka — Board" /></AuthGuard>} />
-        <Route path="/guide/focus" element={<AuthGuard><Placeholder name="Příručka — Fokus" /></AuthGuard>} />
-        <Route path="/guide/voice" element={<AuthGuard><Placeholder name="Příručka — Hlasový vstup" /></AuthGuard>} />
-        <Route path="/guide/admin" element={<AuthGuard><Placeholder name="Příručka — Správa" /></AuthGuard>} />
-        <Route path="/guide/offline" element={<AuthGuard><Placeholder name="Příručka — Offline" /></AuthGuard>} />
+        <Route path="/guide" element={<AuthGuard><GuidePage /></AuthGuard>}>
+          <Route index element={<GuideWelcome />} />
+          <Route path="board" element={<GuideBoard />} />
+          <Route path="focus" element={<GuideFocus />} />
+          <Route path="voice" element={<GuideVoice />} />
+          <Route path="admin" element={<GuideAdmin />} />
+          <Route path="offline" element={<GuideOffline />} />
+        </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

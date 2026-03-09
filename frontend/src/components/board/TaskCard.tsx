@@ -63,6 +63,7 @@ export default function TaskCard({ task, onSelect, onAssignMe, isDraggable = tru
               onClick={handleAssignMe}
               className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-forest-600 hover:border-forest-600 transition-colors"
               title="Vezmu si to"
+              aria-label="Vezmu si to"
             >
               <span className="text-xs">🙋</span>
             </button>

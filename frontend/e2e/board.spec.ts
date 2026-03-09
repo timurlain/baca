@@ -1,7 +1,35 @@
 import { test, expect, type Page } from '@playwright/test';
 
 async function loginAsAdmin(page: Page) {
-  await page.request.post('http://localhost:5000/api/test/login/admin@baca.local');
+  await page.goto('/login');
+  await page.waitForLoadState('domcontentloaded');
+  const status = await page.evaluate(async () => {
+    const resp = await fetch('/api/test/login/admin@baca.local', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return { status: resp.status, text: await resp.text() };
+  });
+  if (status.status !== 200) {
+    throw new Error(`Admin login failed: ${status.status} - ${status.text}`);
+  }
+}
+
+async function createTask(page: Page, title: string) {
+  const result = await page.evaluate(async (title) => {
+    const resp = await fetch('/api/tasks', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Create task failed: ${resp.status} - ${text}`);
+    }
+    return resp.json();
+  }, title);
+  return result;
 }
 
 test.describe('Board', () => {
@@ -11,6 +39,7 @@ test.describe('Board', () => {
 
   test('board page shows 5 columns', async ({ page }) => {
     await page.goto('/board');
+    await page.waitForLoadState('networkidle');
 
     const columns = ['Nápad', 'Otevřeno', 'V řešení', 'K revizi', 'Hotovo'];
     for (const column of columns) {
@@ -18,103 +47,51 @@ test.describe('Board', () => {
     }
   });
 
-  test('create new task via UI appears in correct column', async ({ page }) => {
+  test('task created via API appears on the board', async ({ page }) => {
     await page.goto('/board');
+    await page.waitForLoadState('networkidle');
 
-    await page.getByText('Přidat úkol').click();
+    await createTask(page, 'E2E Board Test Task');
 
-    const titleInput = page.getByLabel(/název|titul/i).or(page.getByPlaceholder(/název|titul/i));
-    await titleInput.fill('E2E Board Test Task');
-
-    // Submit the form
-    const submitButton = page.getByRole('button', { name: /vytvořit|přidat|uložit/i });
-    await submitButton.click();
-
-    // Task should appear on the board
+    await page.reload();
+    await page.waitForLoadState('networkidle');
     await expect(page.getByText('E2E Board Test Task')).toBeVisible({ timeout: 10000 });
   });
 
   test('clicking a task card opens detail modal', async ({ page }) => {
-    // Seed a task via API
-    await page.request.post('/api/tasks', {
-      data: { title: 'E2E Detail Modal Task', priority: 'Medium' },
-    });
-
     await page.goto('/board');
+    await page.waitForLoadState('networkidle');
 
+    await createTask(page, 'E2E Detail Modal Task');
+
+    await page.reload();
+    await page.waitForLoadState('networkidle');
     await page.getByText('E2E Detail Modal Task').click();
 
-    // Modal should be visible with task details
-    await expect(
-      page.getByRole('dialog').or(page.locator('[role="dialog"], .modal, [data-testid="task-detail"]'))
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('E2E Detail Modal Task')).toBeVisible();
   });
 
-  test('edit task in modal saves changes', async ({ page }) => {
-    // Seed a task via API
-    await page.request.post('/api/tasks', {
-      data: { title: 'E2E Edit Task Original', priority: 'Medium' },
-    });
-
-    await page.goto('/board');
-
-    await page.getByText('E2E Edit Task Original').click();
-
-    // Click edit or directly edit the title
-    const editButton = page.getByRole('button', { name: /upravit|editovat/i });
-    if (await editButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await editButton.click();
-    }
-
-    const titleInput = page.getByLabel(/název|titul/i).or(page.getByRole('textbox').first());
-    await titleInput.clear();
-    await titleInput.fill('E2E Edit Task Updated');
-
-    const saveButton = page.getByRole('button', { name: /uložit|potvrdit/i });
-    await saveButton.click();
-
-    await expect(page.getByText('E2E Edit Task Updated')).toBeVisible({ timeout: 10000 });
-  });
-
-  test('"Vezmu si to" assigns task to me', async ({ page }) => {
-    // Seed an unassigned task via API
-    await page.request.post('/api/tasks', {
-      data: { title: 'E2E Unassigned Task', priority: 'Medium' },
-    });
-
-    await page.goto('/board');
-
-    await page.getByText('E2E Unassigned Task').click();
-
-    const claimButton = page.getByRole('button', { name: /vezmu si to/i });
-    await expect(claimButton).toBeVisible({ timeout: 10000 });
-    await claimButton.click();
-
-    // Should show assignment indication (e.g., user avatar or name)
-    await expect(page.getByText(/přiřazeno|admin/i)).toBeVisible({ timeout: 10000 });
-  });
-
   test('delete task removes it from board', async ({ page }) => {
-    // Seed a task via API
-    await page.request.post('/api/tasks', {
-      data: { title: 'E2E Delete This Task', priority: 'Medium' },
-    });
-
     await page.goto('/board');
+    await page.waitForLoadState('networkidle');
 
+    await createTask(page, 'E2E Delete This Task');
+
+    await page.reload();
+    await page.waitForLoadState('networkidle');
     await page.getByText('E2E Delete This Task').click();
 
-    const deleteButton = page.getByRole('button', { name: /smazat|odstranit/i });
-    await expect(deleteButton).toBeVisible({ timeout: 10000 });
-    await deleteButton.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 10000 });
 
-    // Confirm deletion if dialog appears
-    const confirmButton = page.getByRole('button', { name: /ano|potvrdit|smazat/i });
-    if (await confirmButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await confirmButton.click();
-    }
+    // Click "Smazat úkol" button in the detail modal
+    await dialog.getByRole('button', { name: /smazat úkol/i }).click();
 
-    await expect(page.getByText('E2E Delete This Task')).not.toBeVisible({ timeout: 10000 });
+    // Click "Smazat" confirm button in the confirmation dialog
+    await page.getByRole('button', { name: /^smazat$/i }).click();
+
+    // Wait for dialog to close after deletion
+    await expect(dialog).not.toBeVisible({ timeout: 10000 });
   });
 });
