@@ -57,7 +57,8 @@ async function request<T>(
   });
 
   if (res.status === 401) {
-    if (!window.location.pathname.startsWith('/login')) {
+    const path = window.location.pathname;
+    if (!path.startsWith('/login') && !path.startsWith('/auth/verify')) {
       window.location.href = '/login';
     }
     throw new ApiError(401, 'Unauthorized');
@@ -68,7 +69,9 @@ async function request<T>(
   }
 
   if (res.status === 204) return undefined as T;
-  return res.json();
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text);
 }
 
 function postForm<T>(path: string, body: FormData): Promise<T> {
