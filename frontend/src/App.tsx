@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, type ReactNode } from 'react';
 import { auth } from '@/api/client';
+import type { AuthResponse } from '@/types';
 import { UserRole } from '@/types';
 import { AuthContext, useAuthContext } from '@/context/AuthContext';
 
