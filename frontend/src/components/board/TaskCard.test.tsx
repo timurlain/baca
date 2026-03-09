@@ -5,7 +5,7 @@ import { TaskStatus, Priority, UserRole } from '@/types';
 import TaskCard from './TaskCard';
 
 // Mock useAuth
-const mockUser = { id: 1, name: 'Tomáš', role: UserRole.Admin, avatarColor: '#10B981' };
+const mockUser: { id: number; name: string; role: UserRole; avatarColor: string } = { id: 1, name: 'Tomáš', role: UserRole.Admin, avatarColor: '#10B981' };
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     user: mockUser,
@@ -144,7 +144,7 @@ describe('TaskCard', () => {
   });
 
   it('hides assign button for guest users', () => {
-    mockUser.role = UserRole.Guest as UserRole;
+    mockUser.role = UserRole.Guest;
     render(
       <TaskCard
         task={makeTask({ assigneeId: null, assigneeName: null })}
@@ -152,6 +152,6 @@ describe('TaskCard', () => {
       />,
     );
     expect(screen.queryByLabelText('Vezmu si to')).not.toBeInTheDocument();
-    mockUser.role = UserRole.Admin as UserRole;
+    mockUser.role = UserRole.Admin;
   });
 });

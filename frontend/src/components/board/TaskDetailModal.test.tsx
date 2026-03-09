@@ -7,7 +7,7 @@ import { TaskStatus, Priority, UserRole } from '@/types';
 import TaskDetailModal from './TaskDetailModal';
 
 // Mock useAuth
-const mockUser = { id: 1, name: 'Tomáš', role: UserRole.Admin, avatarColor: '#10B981' };
+const mockUser: { id: number; name: string; role: UserRole; avatarColor: string } = { id: 1, name: 'Tomáš', role: UserRole.Admin, avatarColor: '#10B981' };
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     user: mockUser,
@@ -176,7 +176,7 @@ describe('TaskDetailModal', () => {
   });
 
   it('renders description as read-only for guest users', async () => {
-    mockUser.role = UserRole.Guest as UserRole;
+    mockUser.role = UserRole.Guest;
     renderModal();
     await waitFor(() => {
       expect(screen.getByText('Popis úkolu')).toBeInTheDocument();
@@ -184,15 +184,15 @@ describe('TaskDetailModal', () => {
     // Guest should see text, not textarea
     expect(screen.queryByPlaceholderText('Přidejte podrobnější popis...')).not.toBeInTheDocument();
     // Restore
-    mockUser.role = UserRole.Admin as UserRole;
+    mockUser.role = UserRole.Admin;
   });
 
   it('hides delete button for guest users', async () => {
-    mockUser.role = UserRole.Guest as UserRole;
+    mockUser.role = UserRole.Guest;
     renderModal();
     await screen.findByText('Test úkol detail');
     expect(screen.queryByText('Smazat úkol')).not.toBeInTheDocument();
-    mockUser.role = UserRole.Admin as UserRole;
+    mockUser.role = UserRole.Admin;
   });
 
   it('renders "Bez popisu" when description is null', async () => {
@@ -200,12 +200,12 @@ describe('TaskDetailModal', () => {
       http.get('/api/tasks/:id', () =>
         HttpResponse.json({ ...mockTaskDetail, description: null })),
     );
-    mockUser.role = UserRole.Guest as UserRole;
+    mockUser.role = UserRole.Guest;
     renderModal();
     await waitFor(() => {
       expect(screen.getByText('Bez popisu')).toBeInTheDocument();
     });
-    mockUser.role = UserRole.Admin as UserRole;
+    mockUser.role = UserRole.Admin;
   });
 
   it('updates status when select changes', async () => {
