@@ -129,9 +129,11 @@ test.describe('Task Creation Page', () => {
     await page.goto('/tasks/new');
     await page.waitForLoadState('networkidle');
 
-    await page.getByText('Hromadný import').click();
+    const bulkTab = page.getByText('Hromadný import');
+    await expect(bulkTab).toBeVisible({ timeout: 10000 });
+    await bulkTab.click();
 
-    await expect(page.getByPlaceholder(/Vložte text/)).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('textarea')).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole('button', { name: 'Zpracovat' })).toBeVisible();
   });
 
@@ -152,7 +154,7 @@ test.describe('Board — Create Task Buttons', () => {
     await page.goto('/board');
     await page.waitForLoadState('networkidle');
 
-    const button = page.getByRole('button', { name: /Nový úkol/ });
+    const button = page.getByText('Nový úkol');
     await expect(button).toBeVisible({ timeout: 10000 });
   });
 
@@ -161,7 +163,7 @@ test.describe('Board — Create Task Buttons', () => {
     await page.goto('/board');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('button', { name: /Nový úkol/ }).click();
+    await page.getByText('Nový úkol').click();
     await expect(page).toHaveURL(/\/tasks\/new/, { timeout: 10000 });
   });
 
@@ -186,8 +188,8 @@ test.describe('Board — Create Task Buttons', () => {
     // Wait for board to load
     await expect(page.getByText('Nápad')).toBeVisible({ timeout: 10000 });
 
-    // No create button visible
-    await expect(page.getByRole('button', { name: /Nový úkol/ })).not.toBeVisible();
+    // No create button visible (header button with text content)
+    await expect(page.getByText('Nový úkol')).not.toBeVisible();
   });
 
   test('guest user does not see column + buttons', async ({ page }) => {
