@@ -9,7 +9,7 @@ public class AuthMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly bool _allowTestHeaders;
-    private static readonly string[] PublicPathPrefixes = ["/api/auth", "/api/health", "/api/dashboard"];
+    private static readonly string[] PublicPathPrefixes = ["/api/auth", "/api/health", "/api/dashboard", "/api/test"];
 
     public const string CookieName = "baca_session";
 

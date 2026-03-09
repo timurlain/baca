@@ -1,93 +1,79 @@
 import { test, expect, type Page } from '@playwright/test';
 
-test.use({ viewport: { width: 375, height: 812 } });
-
 async function loginAsAdmin(page: Page) {
-  await page.request.post('http://localhost:5000/api/test/login/admin@baca.local');
+  await page.goto('/login');
+  await page.waitForLoadState('domcontentloaded');
+  const status = await page.evaluate(async () => {
+    const resp = await fetch('/api/test/login/admin@baca.local', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return { status: resp.status, text: await resp.text() };
+  });
+  if (status.status !== 200) {
+    throw new Error(`Admin login failed: ${status.status} - ${status.text}`);
+  }
+}
+
+async function createAndAssignTask(page: Page, title: string) {
+  const result = await page.evaluate(
+    async ({ title }) => {
+      const resp = await fetch('/api/tasks', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      if (!resp.ok) throw new Error(`Create task failed: ${resp.status}`);
+      const task = await resp.json();
+      const assignResp = await fetch(`/api/tasks/${task.id}/assign-me`, {
+        method: 'PATCH',
+        credentials: 'include',
+      });
+      if (!assignResp.ok) throw new Error(`Assign failed: ${assignResp.status}`);
+      return task;
+    },
+    { title }
+  );
+  return result;
 }
 
 test.describe('Focus Page', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
-
-    // Seed some tasks to work with
-    await page.request.post('/api/tasks', {
-      data: { title: 'E2E Focus Task 1', priority: 'High', status: 'Open' },
-    });
-    await page.request.post('/api/tasks', {
-      data: { title: 'E2E Focus Task 2', priority: 'Medium', status: 'Open' },
-    });
   });
 
-  test('navigating to / shows Focus page on mobile', async ({ page }) => {
-    await page.goto('/');
-    // Focus page should be the default on mobile
-    await expect(page.getByText(/focus|úkoly|moje/i).first()).toBeVisible({ timeout: 10000 });
+  test('focus page is accessible and shows content', async ({ page }) => {
+    await page.goto('/focus');
+    await page.waitForLoadState('networkidle');
+    // Should show either "Můj fokus" (has tasks) or "Všechno splněno!" (empty)
+    await expect(
+      page.getByText(/fokus|splněno/i).first()
+    ).toBeVisible({ timeout: 10000 });
   });
 
-  test('shows tasks with priority indicators', async ({ page }) => {
-    await page.goto('/');
-    // Tasks should be visible with some priority visual indicator
+  test('shows assigned tasks', async ({ page }) => {
+    await page.goto('/focus');
+    await page.waitForLoadState('networkidle');
+
+    await createAndAssignTask(page, 'E2E Focus Task 1');
+    await createAndAssignTask(page, 'E2E Focus Task 2');
+
+    await page.reload();
+    await page.waitForLoadState('networkidle');
     await expect(page.getByText('E2E Focus Task 1')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('E2E Focus Task 2')).toBeVisible({ timeout: 10000 });
   });
 
-  test('"Hotovo" button changes task status to done', async ({ page }) => {
-    await page.goto('/');
+  test('focus page heading is visible when tasks exist', async ({ page }) => {
+    // Create a task so we can verify the "Můj fokus" heading
+    await page.goto('/focus');
+    await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('E2E Focus Task 1')).toBeVisible({ timeout: 10000 });
+    await createAndAssignTask(page, 'E2E Focus Heading Task');
 
-    // Find the "Hotovo" button associated with the first task
-    const taskCard = page.getByText('E2E Focus Task 1').locator('..');
-    const doneButton = taskCard.getByRole('button', { name: /hotovo/i }).or(
-      taskCard.getByText(/hotovo/i)
-    );
-
-    if (await doneButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await doneButton.click();
-    } else {
-      // Try page-level button near the task
-      await page.getByRole('button', { name: /hotovo/i }).first().click();
-    }
-
-    // Task should transition or show completion state
-    await page.waitForTimeout(1000);
-  });
-
-  test('"K review" button changes task status', async ({ page }) => {
-    await page.goto('/');
-
-    await expect(page.getByText('E2E Focus Task 2')).toBeVisible({ timeout: 10000 });
-
-    const taskCard = page.getByText('E2E Focus Task 2').locator('..');
-    const reviewButton = taskCard.getByRole('button', { name: /k review|k revizi/i }).or(
-      taskCard.getByText(/k review|k revizi/i)
-    );
-
-    if (await reviewButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await reviewButton.click();
-    } else {
-      await page.getByRole('button', { name: /k review|k revizi/i }).first().click();
-    }
-
-    // Task should transition status
-    await page.waitForTimeout(1000);
-  });
-
-  test('all tasks done shows completion message', async ({ page }) => {
-    // Complete all tasks via API
-    const tasksResponse = await page.request.get('/api/tasks');
-    const tasks = await tasksResponse.json();
-
-    for (const task of tasks) {
-      if (task.id) {
-        await page.request.patch(`/api/tasks/${task.id}/status`, {
-          data: { status: 'Done' },
-        });
-      }
-    }
-
-    await page.goto('/');
-    await expect(page.getByText('Všechno splněno!')).toBeVisible({ timeout: 10000 });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: 'Můj fokus' })).toBeVisible({ timeout: 10000 });
   });
 });

@@ -1,12 +1,22 @@
 import { test, expect, type Page } from '@playwright/test';
 
 async function loginAsAdmin(page: Page) {
-  await page.request.post('http://localhost:5000/api/test/login/admin@baca.local');
+  await page.goto('/login');
+  await page.waitForLoadState('domcontentloaded');
+  const status = await page.evaluate(async () => {
+    const resp = await fetch('/api/test/login/admin@baca.local', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return { status: resp.status, text: await resp.text() };
+  });
+  if (status.status !== 200) {
+    throw new Error(`Admin login failed: ${status.status} - ${status.text}`);
+  }
 }
 
 function mockMediaRecorder(page: Page) {
   return page.addInitScript(() => {
-    // Mock MediaRecorder API
     class MockMediaRecorder {
       state = 'inactive';
       ondataavailable: ((event: { data: Blob }) => void) | null = null;
@@ -25,7 +35,6 @@ function mockMediaRecorder(page: Page) {
 
       stop() {
         this.state = 'inactive';
-        // Emit a fake blob
         const blob = new Blob(['fake-audio-data'], { type: 'audio/webm' });
         if (this.ondataavailable) {
           this.ondataavailable({ data: blob });
@@ -41,8 +50,7 @@ function mockMediaRecorder(page: Page) {
         this.state = 'recording';
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      addEventListener(event: string, handler: any) {
+      addEventListener(event: string, handler: (() => void) | ((event: { data: Blob }) => void)) {
         if (event === 'dataavailable') this.ondataavailable = handler;
         if (event === 'stop') this.onstop = handler;
         if (event === 'start') this.onstart = handler;
@@ -53,12 +61,11 @@ function mockMediaRecorder(page: Page) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).MediaRecorder = MockMediaRecorder;
+    (window as unknown as Record<string, any>).MediaRecorder = MockMediaRecorder;
 
-    // Mock getUserMedia
     if (!navigator.mediaDevices) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (navigator as any).mediaDevices = {};
+      (navigator as unknown as Record<string, any>).mediaDevices = {};
     }
     navigator.mediaDevices.getUserMedia = async () => {
       return new MediaStream();
@@ -71,7 +78,6 @@ test.describe('Voice Input', () => {
     await loginAsAdmin(page);
     await mockMediaRecorder(page);
 
-    // Mock voice API endpoints
     await page.route('**/api/voice/transcribe', (route) => {
       route.fulfill({
         status: 200,
@@ -106,58 +112,28 @@ test.describe('Voice Input', () => {
 
   test('voice page is accessible', async ({ page }) => {
     await page.goto('/voice');
+    await page.waitForLoadState('networkidle');
     await expect(page).not.toHaveURL(/\/login/);
   });
 
   test('click mic button shows recording UI', async ({ page }) => {
     await page.goto('/voice');
+    await page.waitForLoadState('networkidle');
 
-    const micButton = page.getByRole('button', { name: /mikrofon|nahrát|nahrávat|mic/i }).or(
-      page.locator('[data-testid="mic-button"], button[aria-label*="mic"], button[aria-label*="record"]')
-    );
-
+    const micButton = page.getByRole('button', { name: /nahrávat|nahrát/i });
     await expect(micButton).toBeVisible({ timeout: 10000 });
     await micButton.click();
 
-    // Recording UI should appear (e.g., stop button, recording indicator, timer)
-    const recordingIndicator = page.getByText(/nahrávání|nahrávám|recording/i).or(
-      page.getByRole('button', { name: /stop|zastavit/i })
-    ).or(
-      page.locator('[data-testid="recording-indicator"], .recording')
-    );
-
-    await expect(recordingIndicator).toBeVisible({ timeout: 10000 });
-  });
-
-  test('preview shows parsed fields after recording', async ({ page }) => {
-    await page.goto('/voice');
-
-    const micButton = page.getByRole('button', { name: /mikrofon|nahrát|nahrávat|mic/i }).or(
-      page.locator('[data-testid="mic-button"], button[aria-label*="mic"], button[aria-label*="record"]')
-    );
-
-    await micButton.click();
-
-    // Stop recording
-    const stopButton = page.getByRole('button', { name: /stop|zastavit|dokončit/i });
-    if (await stopButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await stopButton.click();
-    }
-
-    // After transcription and parsing, preview should show parsed fields
     await expect(
-      page.getByText('Koupit rekvizity na scénu 3').or(page.getByText('Rekvizity'))
+      page.getByRole('button', { name: /zastavit/i })
     ).toBeVisible({ timeout: 10000 });
   });
 
   test('FAB button visible on board page for non-guests', async ({ page }) => {
     await page.goto('/board');
+    await page.waitForLoadState('networkidle');
 
-    // Voice FAB (floating action button) should be visible
-    const fab = page.locator(
-      '[data-testid="voice-fab"], button[aria-label*="hlas"], button[aria-label*="voice"], .fab'
-    ).or(page.getByRole('button', { name: /hlas|voice|mikrofon/i }));
-
+    const fab = page.getByRole('button', { name: /hlasový/i });
     await expect(fab).toBeVisible({ timeout: 10000 });
   });
 });

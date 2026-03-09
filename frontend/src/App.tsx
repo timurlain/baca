@@ -99,6 +99,7 @@ function AuthenticatedApp() {
 
         {/* Home — mobile: Focus, desktop: Dashboard */}
         <Route path="/" element={<AuthGuard><ResponsiveHome /></AuthGuard>} />
+        <Route path="/focus" element={<AuthGuard><FocusPage /></AuthGuard>} />
         <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
 
         {/* Board (Agent C) */}
