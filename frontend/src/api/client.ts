@@ -22,6 +22,8 @@ import type {
   TranscriptionResult,
   VoiceParseRequest,
   VoiceParseResponse,
+  BulkParseRequest,
+  BulkParseResponse,
   DashboardData,
   FocusTask,
   AppSettings,
@@ -220,6 +222,8 @@ export const voice = {
   },
   parse: (data: VoiceParseRequest) =>
     post<VoiceParseResponse>('/api/voice/parse', data),
+  parseBulk: (data: BulkParseRequest) =>
+    post<BulkParseResponse>('/api/voice/parse-bulk', data),
 };
 
 // Settings

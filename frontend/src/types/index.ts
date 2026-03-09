@@ -232,6 +232,14 @@ export interface VoiceParseResponse {
   rawTranscription: string;
 }
 
+export interface BulkParseRequest {
+  text: string;
+}
+
+export interface BulkParseResponse {
+  tasks: VoiceParseResponse[];
+}
+
 // Dashboard
 export interface DashboardData {
   totalTasks: number;
