@@ -10,6 +10,7 @@ import Layout from '@/components/layout/Layout';
 
 // Auth (Agent C)
 import LoginPage from '@/components/auth/LoginPage';
+import VerifyPage from '@/components/auth/VerifyPage';
 
 // Board + Focus (Agent C)
 import KanbanBoard from '@/components/board/KanbanBoard';
@@ -96,6 +97,7 @@ function AuthenticatedApp() {
       <OfflineIndicator />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/verify/:token" element={<VerifyPage />} />
 
         {/* Home — mobile: Focus, desktop: Dashboard */}
         <Route path="/" element={<AuthGuard><ResponsiveHome /></AuthGuard>} />
