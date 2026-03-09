@@ -191,10 +191,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Sync secrets to baca-api
+        if: ${{ secrets.ANTHROPICAPI != '' }}
         run: |
           az containerapp secret set -n baca-api -g ovcina \
             --secrets "anthropic-key=${{ secrets.ANTHROPICAPI }}" \
-            --output none 2>/dev/null || true
+            --output none
           az containerapp update -n baca-api -g ovcina \
             --set-env-vars "Anthropic__ApiKey=secretref:anthropic-key" \
             --output none
