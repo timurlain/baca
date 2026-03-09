@@ -78,6 +78,12 @@ export default function useVoiceRecorder(): UseVoiceRecorderResult {
         }
       };
 
+      recorder.onerror = () => {
+        setError('Nahrávání selhalo');
+        cleanup();
+        setState('idle');
+      };
+
       recorder.start();
       setState('recording');
 

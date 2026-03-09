@@ -72,10 +72,20 @@ export default function VoiceRecorder({
       )}
 
       {state === 'idle' && !error && (
-        <p className="text-sm text-gray-400">Klepněte pro nahrání hlasového příkazu</p>
+        <div className="text-center space-y-2">
+          <p className="text-sm text-gray-400">Klepněte pro nahrání hlasového příkazu</p>
+          <p className="text-xs text-gray-300 max-w-xs mx-auto">
+            Např.: &quot;Koupit 50 metrů lana, přiřadit Honzovi, kategorie logistika, do pátku, vysoká priorita&quot;
+          </p>
+        </div>
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-center">
+          <p className="text-sm font-medium text-red-700">{error}</p>
+          <p className="text-xs text-red-500 mt-1">Klepněte na tlačítko pro opakování</p>
+        </div>
+      )}
     </div>
   );
 }

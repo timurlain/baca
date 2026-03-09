@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useFocus } from '@/hooks/useFocus';
@@ -7,8 +8,21 @@ import { DEFAULT_APP_NAME } from '@/utils/constants';
 import { UserRole } from '@/types';
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { tasks } = useFocus();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showMenu]);
 
   return (
     <header className="bg-forest-800 text-white shadow-md sticky top-0 z-50">
@@ -58,12 +72,30 @@ export default function Header() {
                 </Badge>
               )}
             </Link>
-            <Avatar name={user?.name} color={user?.avatarColor} size="sm" />
           </div>
 
-          {/* Mobile Avatar */}
-          <div className="md:hidden">
-            <Avatar name={user?.name} color={user?.avatarColor} size="sm" />
+          <div className="relative" ref={menuRef}>
+            <button onClick={() => setShowMenu(v => !v)} className="focus:outline-none" aria-label="Uživatelské menu">
+              <Avatar name={user?.name} color={user?.avatarColor} size="sm" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-xs text-gray-500">{user?.role}</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    setShowMenu(false);
+                    await logout();
+                    window.location.href = '/login';
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                >
+                  Odhlásit se
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
