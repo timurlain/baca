@@ -30,6 +30,9 @@ import CategoryManagement from '@/components/admin/CategoryManagement';
 import GameRoleManagement from '@/components/admin/GameRoleManagement';
 import Settings from '@/components/admin/Settings';
 
+// Task creation
+import CreateTaskPage from '@/components/tasks/CreateTaskPage';
+
 // Guide (Phase 2b)
 import GuidePage from '@/components/guide/GuidePage';
 import GuideWelcome from '@/components/guide/GuideWelcome';
@@ -107,6 +110,9 @@ function AuthenticatedApp() {
         {/* Board (Agent C) */}
         <Route path="/board" element={<AuthGuard><KanbanBoard /></AuthGuard>} />
         <Route path="/board/user" element={<AuthGuard><UserBoardPage /></AuthGuard>} />
+
+        {/* Task creation */}
+        <Route path="/tasks/new" element={<AuthGuard><CreateTaskPage /></AuthGuard>} />
 
         {/* Voice (Agent D) */}
         <Route path="/voice" element={<AuthGuard><VoicePage /></AuthGuard>} />
