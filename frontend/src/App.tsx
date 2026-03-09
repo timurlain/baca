@@ -28,12 +28,17 @@ import CategoryManagement from '@/components/admin/CategoryManagement';
 import GameRoleManagement from '@/components/admin/GameRoleManagement';
 import Settings from '@/components/admin/Settings';
 
+// Guide (Phase 2b)
+import GuidePage from '@/components/guide/GuidePage';
+import GuideWelcome from '@/components/guide/GuideWelcome';
+import GuideBoard from '@/components/guide/GuideBoard';
+import GuideFocus from '@/components/guide/GuideFocus';
+import GuideVoice from '@/components/guide/GuideVoice';
+import GuideAdmin from '@/components/guide/GuideAdmin';
+import GuideOffline from '@/components/guide/GuideOffline';
+
 // Offline (Agent D)
 import OfflineIndicator from '@/offline/offlineIndicator';
-
-function Placeholder({ name }: { name: string }) {
-  return <div className="p-8 text-center text-gray-600">Stránka: {name} — Zatím neimplementováno</div>;
-}
 
 function ResponsiveHome() {
   const isMobile = window.innerWidth < 768;
@@ -116,12 +121,14 @@ function AuthenticatedApp() {
         <Route path="/admin/settings" element={<AuthGuard><Settings /></AuthGuard>} />
 
         {/* Guide (Phase 2b) */}
-        <Route path="/guide" element={<AuthGuard><Placeholder name="Příručka" /></AuthGuard>} />
-        <Route path="/guide/board" element={<AuthGuard><Placeholder name="Příručka — Board" /></AuthGuard>} />
-        <Route path="/guide/focus" element={<AuthGuard><Placeholder name="Příručka — Fokus" /></AuthGuard>} />
-        <Route path="/guide/voice" element={<AuthGuard><Placeholder name="Příručka — Hlasový vstup" /></AuthGuard>} />
-        <Route path="/guide/admin" element={<AuthGuard><Placeholder name="Příručka — Správa" /></AuthGuard>} />
-        <Route path="/guide/offline" element={<AuthGuard><Placeholder name="Příručka — Offline" /></AuthGuard>} />
+        <Route path="/guide" element={<AuthGuard><GuidePage /></AuthGuard>}>
+          <Route index element={<GuideWelcome />} />
+          <Route path="board" element={<GuideBoard />} />
+          <Route path="focus" element={<GuideFocus />} />
+          <Route path="voice" element={<GuideVoice />} />
+          <Route path="admin" element={<GuideAdmin />} />
+          <Route path="offline" element={<GuideOffline />} />
+        </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
