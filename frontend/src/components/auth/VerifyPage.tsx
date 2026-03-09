@@ -5,22 +5,21 @@ import { auth } from '@/api/client';
 export default function VerifyPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(!token);
 
   useEffect(() => {
-    if (!token) {
-      setError(true);
-      return;
-    }
+    if (!token) return;
 
+    let cancelled = false;
     auth.verifyToken(token)
       .then(() => {
-        window.location.href = '/';
+        if (!cancelled) window.location.href = '/';
       })
       .catch(() => {
-        setError(true);
+        if (!cancelled) setError(true);
       });
-  }, [token, navigate]);
+    return () => { cancelled = true; };
+  }, [token]);
 
   if (error) {
     return (

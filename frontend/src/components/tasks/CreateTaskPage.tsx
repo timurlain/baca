@@ -58,7 +58,7 @@ export default function CreateTaskPage() {
     }
   };
 
-  const handleBulkSaveComplete = (_count: number) => {
+  const handleBulkSaveComplete = () => {
     navigate('/board');
   };
 
