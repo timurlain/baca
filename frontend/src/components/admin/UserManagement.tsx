@@ -4,6 +4,7 @@ import { UserRole } from '@/types';
 import type { User, CreateUserRequest, AuthResponse } from '@/types';
 import { ROLE_LABELS, ROLE_BADGE_CLASSES } from '@/utils/constants';
 import StatusMessage, { type Message } from './StatusMessage';
+import AdminNav from './AdminNav';
 
 interface AddUserFormProps {
   onSubmit: (data: CreateUserRequest) => void;
@@ -21,7 +22,7 @@ function AddUserForm({ onSubmit, onCancel }: AddUserFormProps) {
     onSubmit({
       name,
       email,
-      phone: phone || null,
+      phone: phone ? `+420${phone}` : null,
       role,
     });
   };
@@ -124,6 +125,7 @@ export default function UserManagement() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-4">
+      <AdminNav />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Správa uživatelů</h1>
         {!showForm && (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { settings } from '@/api/client';
 import StatusMessage, { type Message } from './StatusMessage';
+import AdminNav from './AdminNav';
 
 export default function Settings() {
   const [loaded, setLoaded] = useState(false);
@@ -45,6 +46,7 @@ export default function Settings() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
+      <AdminNav />
       <h1 className="text-xl font-bold text-gray-900">Nastavení</h1>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-4">

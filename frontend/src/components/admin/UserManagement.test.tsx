@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { UserRole } from '@/types';
@@ -29,10 +30,14 @@ function setup() {
   );
 }
 
+function renderInRouter(ui: React.ReactElement) {
+  return render(<BrowserRouter>{ui}</BrowserRouter>);
+}
+
 describe('UserManagement', () => {
   it('renders user table', async () => {
     setup();
-    render(<UserManagement />);
+    renderInRouter(<UserManagement />);
     expect(await screen.findByText('Tomáš')).toBeInTheDocument();
     expect(screen.getByText('Jana')).toBeInTheDocument();
     expect(screen.getByText('Administrátor')).toBeInTheDocument();
@@ -51,7 +56,7 @@ describe('UserManagement', () => {
       ),
     );
     const user = userEvent.setup();
-    render(<UserManagement />);
+    renderInRouter(<UserManagement />);
     await screen.findByText('Tomáš');
 
     await user.click(screen.getByText('Přidat uživatele'));
@@ -72,7 +77,7 @@ describe('UserManagement', () => {
       ),
     );
     const user = userEvent.setup();
-    render(<UserManagement />);
+    renderInRouter(<UserManagement />);
     await screen.findByText('Jana');
 
     const deactivateButtons = screen.getAllByText('Deaktivovat');
@@ -90,7 +95,7 @@ describe('UserManagement', () => {
       http.post('/api/users/:id/resend-link', () => new HttpResponse(null, { status: 204 })),
     );
     const user = userEvent.setup();
-    render(<UserManagement />);
+    renderInRouter(<UserManagement />);
     await screen.findByText('Tomáš');
 
     const resendButtons = screen.getAllByText('Odeslat odkaz');
@@ -104,7 +109,7 @@ describe('UserManagement', () => {
   it('cannot deactivate yourself', async () => {
     setup();
     const user = userEvent.setup();
-    render(<UserManagement />);
+    renderInRouter(<UserManagement />);
     await screen.findByText('Tomáš');
 
     // First deactivate button belongs to current user (id: 1)
