@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import type { GameRole } from '@/types';
@@ -11,10 +12,14 @@ const mockRoles: GameRole[] = [
   { id: 2, name: 'Vládce', description: 'Nation Ruler', color: '#8B5CF6', sortOrder: 2, createdAt: '2026-01-01T00:00:00Z' },
 ];
 
+function renderInRouter(ui: React.ReactElement) {
+  return render(<BrowserRouter>{ui}</BrowserRouter>);
+}
+
 describe('GameRoleManagement', () => {
   it('renders role list', async () => {
     server.use(http.get('/api/gameroles', () => HttpResponse.json(mockRoles)));
-    render(<GameRoleManagement />);
+    renderInRouter(<GameRoleManagement />);
     expect(await screen.findByText('Osud')).toBeInTheDocument();
     expect(screen.getByText('Vládce')).toBeInTheDocument();
     expect(screen.getByText('Game Master')).toBeInTheDocument();
@@ -31,7 +36,7 @@ describe('GameRoleManagement', () => {
       ),
     );
     const user = userEvent.setup();
-    render(<GameRoleManagement />);
+    renderInRouter(<GameRoleManagement />);
     await screen.findByText('Osud');
 
     await user.click(screen.getByText('Přidat herní roli'));
@@ -52,7 +57,7 @@ describe('GameRoleManagement', () => {
       ),
     );
     const user = userEvent.setup();
-    render(<GameRoleManagement />);
+    renderInRouter(<GameRoleManagement />);
     await screen.findByText('Osud');
 
     const editButtons = screen.getAllByText('Upravit');
@@ -74,7 +79,7 @@ describe('GameRoleManagement', () => {
       http.delete('/api/gameroles/1', () => new HttpResponse(null, { status: 204 })),
     );
     const user = userEvent.setup();
-    render(<GameRoleManagement />);
+    renderInRouter(<GameRoleManagement />);
     await screen.findByText('Osud');
 
     const deleteButtons = screen.getAllByText('Smazat');
@@ -91,7 +96,7 @@ describe('GameRoleManagement', () => {
       http.delete('/api/gameroles/1', () => new HttpResponse('Conflict', { status: 409 })),
     );
     const user = userEvent.setup();
-    render(<GameRoleManagement />);
+    renderInRouter(<GameRoleManagement />);
     await screen.findByText('Osud');
 
     const deleteButtons = screen.getAllByText('Smazat');

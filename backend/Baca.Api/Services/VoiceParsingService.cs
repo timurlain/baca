@@ -110,9 +110,7 @@ public sealed class VoiceParsingService(
                     BuildUserPrompt(transcription, activeUsers, categories))
             ]);
 
-        var apiKey = configuration["Anthropic:ApiKey"]
-            ?? configuration["Anthropic__ApiKey"]
-            ?? throw new InvalidOperationException("Anthropic API key is not configured.");
+        var apiKey = GetAnthropicApiKey();
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages")
         {
@@ -202,10 +200,7 @@ public sealed class VoiceParsingService(
                     BuildBulkUserPrompt(text, activeUsers, categories))
             ]);
 
-        var apiKey = configuration["Anthropic:ApiKey"]
-            ?? configuration["Anthropic__ApiKey"]
-            ?? throw new InvalidOperationException("Anthropic API key is not configured.");
-
+        var apiKey = GetAnthropicApiKey();
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages")
         {
             Content = JsonContent.Create(payload, options: SerializerOptions)
@@ -526,6 +521,14 @@ public sealed class VoiceParsingService(
             Status = TaskItemStatus.Open,
             RawTranscription = transcription
         };
+    }
+
+    private string GetAnthropicApiKey()
+    {
+        return configuration["Anthropic:ApiKey"]
+            ?? configuration["Anthropic__ApiKey"]
+            ?? configuration["AnthropicKey"]
+            ?? throw new InvalidOperationException("Anthropic API key is not configured.");
     }
 
     private static Priority? ParsePriority(string? value)

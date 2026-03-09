@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { TaskDetail, TaskStatus, Priority, User, Category } from '@/types';
+import type { TaskDetail, TaskStatus, Priority, User, Category, TaskItem } from '@/types';
 import { UserRole } from '@/types';
 import { tasks as tasksApi, categories as categoriesApi, users as usersApi } from '@/api/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,6 +22,9 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [addingSubtask, setAddingSubtask] = useState(false);
+  const [showSubtaskForm, setShowSubtaskForm] = useState(false);
   const isGuest = user?.role === UserRole.Guest;
 
   const fetchData = useCallback(async () => {
@@ -66,6 +69,33 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
       onClose();
     } catch (err) {
       console.error('Delete failed:', err);
+    }
+  };
+
+  const handleAddSubtask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const title = newSubtaskTitle.trim();
+    if (!title) return;
+    setAddingSubtask(true);
+    try {
+      await tasksApi.create({ title, parentTaskId: taskId });
+      setNewSubtaskTitle('');
+      setShowSubtaskForm(false);
+      fetchData();
+    } catch (err) {
+      console.error('Failed to create subtask:', err);
+    } finally {
+      setAddingSubtask(false);
+    }
+  };
+
+  const handleSubtaskStatusToggle = async (subtask: TaskItem) => {
+    const nextStatus = subtask.status === 'Done' ? 'Open' : 'Done';
+    try {
+      await tasksApi.changeStatus(subtask.id, { status: nextStatus });
+      fetchData();
+    } catch (err) {
+      console.error('Failed to update subtask status:', err);
     }
   };
 
@@ -117,10 +147,89 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                   )}
                 </div>
 
-                {/* Subtasks stub */}
+                {/* Subtasks */}
                 <div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Subtasky</h3>
-                  <div className="text-sm text-gray-500 italic">Zatím neimplementováno.</div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                      Subtasky
+                      {task.subtasks.length > 0 && (
+                        <span className="ml-1 text-gray-500 normal-case font-normal">
+                          ({task.subtasks.filter(s => s.status === 'Done').length}/{task.subtasks.length})
+                        </span>
+                      )}
+                    </h3>
+                    {!isGuest && !showSubtaskForm && (
+                      <button
+                        onClick={() => setShowSubtaskForm(true)}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        + Přidat
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    {task.subtasks.map((subtask) => (
+                      <div key={subtask.id} className="flex items-center gap-2 py-1">
+                        {!isGuest ? (
+                          <button
+                            onClick={() => handleSubtaskStatusToggle(subtask)}
+                            className={cn(
+                              "w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                              subtask.status === 'Done'
+                                ? "bg-green-500 border-green-500 text-white"
+                                : "border-gray-300 hover:border-green-400"
+                            )}
+                          >
+                            {subtask.status === 'Done' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                        ) : (
+                          <span className={cn(
+                            "w-4 h-4 rounded border-2 flex-shrink-0",
+                            subtask.status === 'Done' ? "bg-green-500 border-green-500" : "border-gray-300"
+                          )} />
+                        )}
+                        <span className={cn(
+                          "text-sm flex-1",
+                          subtask.status === 'Done' ? "line-through text-gray-400" : "text-gray-700"
+                        )}>
+                          {subtask.title}
+                        </span>
+                      </div>
+                    ))}
+                    {task.subtasks.length === 0 && !showSubtaskForm && (
+                      <p className="text-xs text-gray-400 italic">Žádné subtasky</p>
+                    )}
+                  </div>
+                  {showSubtaskForm && (
+                    <form onSubmit={handleAddSubtask} className="mt-2 flex gap-2">
+                      <input
+                        type="text"
+                        autoFocus
+                        value={newSubtaskTitle}
+                        onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                        placeholder="Název subtasku..."
+                        className="flex-1 text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-forest-600"
+                      />
+                      <button
+                        type="submit"
+                        disabled={addingSubtask || !newSubtaskTitle.trim()}
+                        className="text-xs bg-blue-600 text-white rounded px-3 py-1 hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        Přidat
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowSubtaskForm(false); setNewSubtaskTitle(''); }}
+                        className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+                      >
+                        Zrušit
+                      </button>
+                    </form>
+                  )}
                 </div>
 
                 {/* Comments stub */}

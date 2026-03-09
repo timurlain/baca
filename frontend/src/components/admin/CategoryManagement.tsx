@@ -4,6 +4,7 @@ import type { Category, CreateCategoryRequest } from '@/types';
 import { DEFAULT_PALETTE } from '@/utils/constants';
 import ColorPicker from './ColorPicker';
 import StatusMessage, { type Message } from './StatusMessage';
+import AdminNav from './AdminNav';
 
 export default function CategoryManagement() {
   const [categoryList, setCategoryList] = useState<Category[]>([]);
@@ -72,6 +73,7 @@ export default function CategoryManagement() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
+      <AdminNav />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Správa kategorií</h1>
         {!showForm && (

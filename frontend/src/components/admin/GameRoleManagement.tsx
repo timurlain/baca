@@ -4,6 +4,7 @@ import type { GameRole, CreateGameRoleRequest } from '@/types';
 import { GAME_ROLE_PALETTE } from '@/utils/constants';
 import ColorPicker from './ColorPicker';
 import StatusMessage, { type Message } from './StatusMessage';
+import AdminNav from './AdminNav';
 
 export default function GameRoleManagement() {
   const [roleList, setRoleList] = useState<GameRole[]>([]);
@@ -75,6 +76,7 @@ export default function GameRoleManagement() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
+      <AdminNav />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Správa herních rolí</h1>
         {!showForm && (
