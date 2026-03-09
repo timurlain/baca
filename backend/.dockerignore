@@ -1,0 +1,6 @@
+**/bin/
+**/obj/
+**/TestResults/
+**/coveragereport/
+Baca.Api.Tests/
+Baca.Api.IntegrationTests/

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+e2e/
+playwright-report/
+coverage/
+*.test.tsx
+*.test.ts
