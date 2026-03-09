@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useAuthContext } from '@/App';
+import { useAuthContext } from '@/context/AuthContext';
 import { UserRole } from '@/types';
 
 const topics = [

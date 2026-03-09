@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { auth } from '@/api/client';
-import type { AuthResponse } from '@/types';
 import { UserRole } from '@/types';
+import { AuthContext, useAuthContext } from '@/context/AuthContext';
 
 // Layout (Agent C)
 import Layout from '@/components/layout/Layout';
@@ -45,13 +45,6 @@ function ResponsiveHome() {
   return isMobile
     ? <FocusPage />
     : <Dashboard />;
-}
-
-// Auth context — single auth.me() call shared across the app (Agent D's fix for duplicate calls)
-const AuthContext = createContext<{ user: AuthResponse | null; loading: boolean }>({ user: null, loading: true });
-
-export function useAuthContext() {
-  return useContext(AuthContext);
 }
 
 function AuthProvider({ children }: { children: ReactNode }) {

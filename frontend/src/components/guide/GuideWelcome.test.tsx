@@ -4,14 +4,14 @@ import { MemoryRouter } from 'react-router-dom';
 import GuideWelcome from './GuideWelcome';
 import { UserRole } from '@/types';
 
-vi.mock('@/App', () => ({
+vi.mock('@/context/AuthContext', () => ({
   useAuthContext: vi.fn(() => ({
     user: { role: UserRole.Admin },
     loading: false,
   })),
 }));
 
-import { useAuthContext } from '@/App';
+import { useAuthContext } from '@/context/AuthContext';
 const mockUseAuthContext = vi.mocked(useAuthContext);
 
 describe('GuideWelcome', () => {

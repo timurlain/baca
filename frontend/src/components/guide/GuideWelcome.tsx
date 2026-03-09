@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useAuthContext } from '@/App';
+import { useAuthContext } from '@/context/AuthContext';
 import { UserRole } from '@/types';
 
 export default function GuideWelcome() {

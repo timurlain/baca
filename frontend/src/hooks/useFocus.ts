@@ -13,7 +13,7 @@ export function useFocus() {
       const data = await focus.list();
       setTasks(data);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Nepodařilo se načíst úkoly.');
     } finally {
       setLoading(false);

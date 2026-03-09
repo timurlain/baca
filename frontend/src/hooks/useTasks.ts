@@ -26,7 +26,7 @@ export function useTasks(initialFilters: TaskFilters = {}) {
       });
       setTasks(data);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Nepodařilo se načíst úkoly.');
     } finally {
       setLoading(false);
@@ -51,12 +51,8 @@ export function useTasks(initialFilters: TaskFilters = {}) {
   };
 
   const assignMe = async (taskId: number) => {
-    try {
-      const updatedTask = await tasksApi.assignMe(taskId);
-      setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
-    } catch (err) {
-      throw err;
-    }
+    const updatedTask = await tasksApi.assignMe(taskId);
+    setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
   };
 
   return { 
