@@ -45,6 +45,6 @@ test.describe('Admin Pages', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByText('Nastavení')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Nastavení' })).toBeVisible({ timeout: 10000 });
   });
 });

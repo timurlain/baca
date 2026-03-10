@@ -10,7 +10,7 @@ export default function GuideVoice() {
       <div className="space-y-3">
         <h2 className="text-lg font-bold text-gray-900">Jak na to</h2>
         <ol className="list-decimal list-inside space-y-2 text-gray-700">
-          <li>Stiskni zelené tlačítko s mikrofonem (na stránce <strong>Hlas</strong> nebo plovoucí tlačítko na boardu).</li>
+          <li>Stiskni zelené tlačítko s mikrofonem (na stránce <strong>Hlas</strong> nebo plovoucí tlačítko na boardu). Pod tlačítkem se zobrazí ukázkový text, jak mluvit.</li>
           <li>Mluv česky, přirozeně. Například: <em>„Koupit lano na scénu 3, vysoká priorita, přiřadit Tomášovi."</em></li>
           <li>Stiskni <strong>červené tlačítko</strong> pro zastavení nahrávání.</li>
           <li>AI vyplní formulář — zkontroluj a uprav, co je potřeba.</li>

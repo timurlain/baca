@@ -23,13 +23,20 @@ export default function GuideWelcome() {
       </div>
 
       <div className="space-y-3">
+        <h2 className="text-lg font-bold text-gray-900">Odhlášení</h2>
+        <p className="text-gray-700">
+          Pro odhlášení klikni na svůj <strong>avatar</strong> v hlavičce — v rozbalovacím menu zvol <strong>„Odhlásit se"</strong>.
+        </p>
+      </div>
+
+      <div className="space-y-3">
         <h2 className="text-lg font-bold text-gray-900">Témata</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <TopicCard to="/guide/board" title="Nástěnka (Board)" desc="Sloupce, přesouvání, přiřazení" />
           <TopicCard to="/guide/focus" title="Můj fokus" desc="Tvoje úkoly, tlačítka Hotovo a K review" />
           <TopicCard to="/guide/voice" title="Hlasový vstup" desc="Zadej úkol hlasem" />
           {user?.role === UserRole.Admin && (
-            <TopicCard to="/guide/admin" title="Správa" desc="Uživatelé, kategorie, PIN" />
+            <TopicCard to="/guide/admin" title="Správa" desc="Uživatelé, kategorie, herní role, PIN" />
           )}
           <TopicCard to="/guide/offline" title="Offline režim" desc="Co funguje bez signálu" />
         </div>
