@@ -31,8 +31,9 @@ import TagManagement from '@/components/admin/TagManagement';
 import GameRoleManagement from '@/components/admin/GameRoleManagement';
 import Settings from '@/components/admin/Settings';
 
-// Task creation
+// Task creation & list
 import CreateTaskPage from '@/components/tasks/CreateTaskPage';
+import TaskListPage from '@/components/tasks/TaskListPage';
 
 // Guide (Phase 2b)
 import GuidePage from '@/components/guide/GuidePage';
@@ -112,7 +113,8 @@ function AuthenticatedApp() {
         <Route path="/board" element={<AuthGuard><KanbanBoard /></AuthGuard>} />
         <Route path="/board/user" element={<AuthGuard><UserBoardPage /></AuthGuard>} />
 
-        {/* Task creation */}
+        {/* Tasks */}
+        <Route path="/tasks" element={<AuthGuard><TaskListPage /></AuthGuard>} />
         <Route path="/tasks/new" element={<AuthGuard><CreateTaskPage /></AuthGuard>} />
 
         {/* Voice (Agent D) */}

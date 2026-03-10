@@ -31,6 +31,9 @@ public static class TaskEndpoints
         string? search,
         int? parentId,
         int? tag,
+        Priority? priority,
+        bool? overdue,
+        bool? all,
         CancellationToken ct)
     {
         if (!RequireAuth(context))
@@ -54,15 +57,27 @@ public static class TaskEndpoints
             query = query.Where(t => t.AssigneeId == assignee);
 
         if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(t => EF.Functions.ILike(t.Title, $"%{search}%"));
+            query = query.Where(t =>
+                EF.Functions.ILike(t.Title, $"%{search}%")
+                || (t.Description != null && EF.Functions.ILike(t.Description, $"%{search}%"))
+                || t.Comments.Any(c => EF.Functions.ILike(c.Text, $"%{search}%")));
 
         if (tag is not null)
             query = query.Where(t => t.Tags.Any(tg => tg.Id == tag));
 
-        if (parentId is not null)
-            query = query.Where(t => t.ParentTaskId == parentId);
-        else
-            query = query.Where(t => t.ParentTaskId == null);
+        if (priority is not null)
+            query = query.Where(t => t.Priority == priority);
+
+        if (overdue == true)
+            query = query.Where(t => t.DueDate != null && t.DueDate < DateTime.UtcNow && t.Status != TaskItemStatus.Done);
+
+        if (all != true)
+        {
+            if (parentId is not null)
+                query = query.Where(t => t.ParentTaskId == parentId);
+            else
+                query = query.Where(t => t.ParentTaskId == null);
+        }
 
         var tasks = await query
             .OrderBy(t => t.SortOrder)

@@ -41,8 +41,11 @@ export default function Header() {
             <NavLink to="/board" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
               Tabule
             </NavLink>
+            <NavLink to="/tasks" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
+              {"\u00dakoly"}
+            </NavLink>
             <NavLink to="/board/user" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
-              Uživatelé
+              {"\u0055\u017eivatel\u00e9"}
             </NavLink>
             <NavLink to="/voice" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
               Hlas

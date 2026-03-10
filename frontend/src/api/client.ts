@@ -135,6 +135,9 @@ export const tasks = {
     search?: string;
     parentId?: number;
     tag?: number;
+    priority?: string;
+    overdue?: boolean;
+    all?: boolean;
   }) => {
     const query = new URLSearchParams();
     if (params?.status) query.set('status', params.status);
@@ -143,6 +146,9 @@ export const tasks = {
     if (params?.search) query.set('search', params.search);
     if (params?.parentId) query.set('parentId', String(params.parentId));
     if (params?.tag) query.set('tag', String(params.tag));
+    if (params?.priority) query.set('priority', params.priority);
+    if (params?.overdue) query.set('overdue', 'true');
+    if (params?.all) query.set('all', 'true');
     const qs = query.toString();
     return get<TaskItem[]>(`/api/tasks${qs ? `?${qs}` : ''}`);
   },
