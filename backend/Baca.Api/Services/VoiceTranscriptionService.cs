@@ -71,20 +71,67 @@ public sealed partial class VoiceTranscriptionService(
             using var recognizer = new SpeechRecognizer(speechConfig, audioConfig);
 
             LogRecognizing();
-            var result = await recognizer.RecognizeOnceAsync();
-            var reasonText = result.Reason.ToString();
-            LogRecognitionResult(reasonText, result.Text);
 
-            return result.Reason switch
+            var segments = new List<string>();
+            var sessionStopped = new TaskCompletionSource<bool>();
+            CancellationDetails? cancelDetails = null;
+
+            recognizer.Recognized += (_, e) =>
             {
-                ResultReason.RecognizedSpeech when !string.IsNullOrWhiteSpace(result.Text) => new TranscriptionResult
+                var reason = e.Result.Reason.ToString();
+                LogRecognitionResult(reason, e.Result.Text);
+                if (e.Result.Reason == ResultReason.RecognizedSpeech
+                    && !string.IsNullOrWhiteSpace(e.Result.Text))
                 {
-                    Transcription = result.Text.Trim()
-                },
-                ResultReason.NoMatch => throw new InvalidOperationException("Azure Speech did not recognize any speech."),
-                ResultReason.Canceled => throw CreateSpeechCancellationException(result),
-                _ => throw new InvalidOperationException($"Azure Speech returned an unexpected recognition result: {result.Reason}.")
+                    segments.Add(e.Result.Text.Trim());
+                }
             };
+
+            recognizer.Canceled += (_, e) =>
+            {
+                var cancelReason = e.Reason.ToString();
+                LogCanceled(cancelReason, e.ErrorDetails ?? "(none)");
+                if (e.Reason == CancellationReason.Error)
+                {
+                    cancelDetails = CancellationDetails.FromResult(e.Result);
+                }
+                sessionStopped.TrySetResult(true);
+            };
+
+            recognizer.SessionStopped += (_, _) =>
+            {
+                LogSessionStopped();
+                sessionStopped.TrySetResult(true);
+            };
+
+            await recognizer.StartContinuousRecognitionAsync();
+
+            // Wait for the file to be fully processed or cancellation
+            using (ct.Register(() => sessionStopped.TrySetCanceled()))
+            {
+                await sessionStopped.Task;
+            }
+
+            await recognizer.StopContinuousRecognitionAsync();
+
+            if (cancelDetails is not null)
+            {
+                var errorDetails = string.IsNullOrWhiteSpace(cancelDetails.ErrorDetails)
+                    ? "No details provided."
+                    : cancelDetails.ErrorDetails;
+                throw new InvalidOperationException(
+                    $"Azure Speech canceled transcription: {cancelDetails.Reason}. {errorDetails}");
+            }
+
+            var fullText = string.Join(" ", segments);
+            LogFullTranscription(fullText, segments.Count);
+
+            if (string.IsNullOrWhiteSpace(fullText))
+            {
+                throw new InvalidOperationException("Azure Speech did not recognize any speech.");
+            }
+
+            return new TranscriptionResult { Transcription = fullText };
         }
         catch (Exception ex) when (ex is not InvalidOperationException)
         {
@@ -224,11 +271,20 @@ public sealed partial class VoiceTranscriptionService(
     [LoggerMessage(Level = LogLevel.Debug, Message = "Creating SpeechRecognizer (language=cs-CZ)")]
     private partial void LogCreatingRecognizer();
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Calling RecognizeOnceAsync...")]
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Starting continuous recognition...")]
     private partial void LogRecognizing();
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "RecognizeOnceAsync result: Reason={Reason}, Text='{Text}'")]
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Recognized segment: Reason={Reason}, Text='{Text}'")]
     private partial void LogRecognitionResult(string reason, string text);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Recognition canceled: Reason={Reason}, Details='{Details}'")]
+    private partial void LogCanceled(string reason, string details);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Recognition session stopped")]
+    private partial void LogSessionStopped();
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Full transcription: '{Text}' ({SegmentCount} segments)")]
+    private partial void LogFullTranscription(string text, int segmentCount);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Unexpected error during transcription")]
     private partial void LogTranscriptionError(Exception ex);
