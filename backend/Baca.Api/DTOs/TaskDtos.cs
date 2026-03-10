@@ -27,6 +27,7 @@ public class TaskDto
     public int SubTaskCount { get; set; }
     public int SubTaskDoneCount { get; set; }
     public int CommentCount { get; set; }
+    public List<TagDto> Tags { get; set; } = [];
 }
 
 public class TaskDetailDto
@@ -54,6 +55,7 @@ public class TaskDetailDto
     public DateTime UpdatedAt { get; set; }
     public List<TaskDto> Subtasks { get; set; } = [];
     public List<CommentDto> Comments { get; set; } = [];
+    public List<TagDto> Tags { get; set; } = [];
 }
 
 public class CreateTaskRequest
@@ -66,6 +68,7 @@ public class CreateTaskRequest
     public int? AssigneeId { get; set; }
     public int? ParentTaskId { get; set; }
     public DateTime? DueDate { get; set; }
+    public List<int>? TagIds { get; set; }
 }
 
 public class UpdateTaskRequest
@@ -78,6 +81,7 @@ public class UpdateTaskRequest
     public int? AssigneeId { get; set; }
     public int? ParentTaskId { get; set; }
     public DateTime? DueDate { get; set; }
+    public List<int>? TagIds { get; set; }
 }
 
 public class StatusChangeRequest

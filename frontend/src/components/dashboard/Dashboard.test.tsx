@@ -30,7 +30,7 @@ const fullMock: DashboardData = {
       parentTaskId: null, dueDate: null, sortOrder: 0,
       createdById: 1, createdByName: 'Tomáš',
       createdAt: '2026-03-01T00:00:00Z', updatedAt: '2026-03-01T00:00:00Z',
-      subTaskCount: 0, subTaskDoneCount: 0, commentCount: 0,
+      subTaskCount: 0, subTaskDoneCount: 0, commentCount: 0, tags: [],
     },
   ],
   myTaskCount: 3,

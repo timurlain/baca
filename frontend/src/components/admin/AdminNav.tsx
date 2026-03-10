@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 const adminLinks = [
   { to: '/admin/users', label: 'Uživatelé' },
   { to: '/admin/categories', label: 'Kategorie' },
+  { to: '/admin/tags', label: 'Značky' },
   { to: '/admin/gameroles', label: 'Herní role' },
   { to: '/admin/settings', label: 'Nastavení' },
 ];

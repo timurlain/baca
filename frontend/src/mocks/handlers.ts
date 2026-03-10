@@ -77,6 +77,7 @@ const mockTasks: TaskItem[] = [
     subTaskCount: 0,
     subTaskDoneCount: 0,
     commentCount: 0,
+    tags: [],
   },
 ]
 

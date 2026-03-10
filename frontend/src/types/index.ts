@@ -79,6 +79,7 @@ export interface TaskItem {
   subTaskCount: number;
   subTaskDoneCount: number;
   commentCount: number;
+  tags: Tag[];
 }
 
 export interface TaskDetail {
@@ -104,6 +105,7 @@ export interface TaskDetail {
   updatedAt: string;
   subtasks: TaskItem[];
   comments: Comment[];
+  tags: Tag[];
 }
 
 export interface CreateTaskRequest {
@@ -115,6 +117,7 @@ export interface CreateTaskRequest {
   assigneeId?: number | null;
   parentTaskId?: number | null;
   dueDate?: string | null;
+  tagIds?: number[];
 }
 
 export interface UpdateTaskRequest {
@@ -126,6 +129,7 @@ export interface UpdateTaskRequest {
   assigneeId?: number | null;
   parentTaskId?: number | null;
   dueDate?: string | null;
+  tagIds?: number[];
 }
 
 export interface StatusChangeRequest {
@@ -193,6 +197,24 @@ export interface UpdateGameRoleRequest {
   description?: string | null;
   color?: string;
   sortOrder?: number;
+}
+
+// Tag
+export interface Tag {
+  id: number;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
+export interface CreateTagRequest {
+  name: string;
+  color: string;
+}
+
+export interface UpdateTagRequest {
+  name?: string;
+  color?: string;
 }
 
 // Auth

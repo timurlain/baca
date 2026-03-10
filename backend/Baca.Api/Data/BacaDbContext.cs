@@ -15,6 +15,7 @@ public class BacaDbContext : DbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<GameRole> GameRoles => Set<GameRole>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
+    public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<AppSettings> AppSettings => Set<AppSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -100,6 +101,16 @@ public class BacaDbContext : DbContext
         modelBuilder.Entity<GameRole>(entity =>
         {
             entity.HasIndex(gr => gr.Name).IsUnique();
+        });
+
+        // Tag
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasIndex(t => t.Name).IsUnique();
+
+            entity.HasMany(t => t.Tasks)
+                .WithMany(ti => ti.Tags)
+                .UsingEntity("TaskTag");
         });
 
         // AppSettings — single row, seeded at runtime in Program.cs

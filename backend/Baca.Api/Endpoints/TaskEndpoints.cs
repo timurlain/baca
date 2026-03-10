@@ -30,6 +30,10 @@ public static class TaskEndpoints
         int? assignee,
         string? search,
         int? parentId,
+        int? tag,
+        Priority? priority,
+        bool? overdue,
+        bool? all,
         CancellationToken ct)
     {
         if (!RequireAuth(context))
@@ -40,6 +44,7 @@ public static class TaskEndpoints
             .Include(t => t.Category)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
+            .Include(t => t.Tags)
             .AsQueryable();
 
         if (status is not null)
@@ -52,12 +57,27 @@ public static class TaskEndpoints
             query = query.Where(t => t.AssigneeId == assignee);
 
         if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(t => EF.Functions.ILike(t.Title, $"%{search}%"));
+            query = query.Where(t =>
+                EF.Functions.ILike(t.Title, $"%{search}%")
+                || (t.Description != null && EF.Functions.ILike(t.Description, $"%{search}%"))
+                || t.Comments.Any(c => EF.Functions.ILike(c.Text, $"%{search}%")));
 
-        if (parentId is not null)
-            query = query.Where(t => t.ParentTaskId == parentId);
-        else
-            query = query.Where(t => t.ParentTaskId == null);
+        if (tag is not null)
+            query = query.Where(t => t.Tags.Any(tg => tg.Id == tag));
+
+        if (priority is not null)
+            query = query.Where(t => t.Priority == priority);
+
+        if (overdue == true)
+            query = query.Where(t => t.DueDate != null && t.DueDate < DateTime.UtcNow && t.Status != TaskItemStatus.Done);
+
+        if (all != true)
+        {
+            if (parentId is not null)
+                query = query.Where(t => t.ParentTaskId == parentId);
+            else
+                query = query.Where(t => t.ParentTaskId == null);
+        }
 
         var tasks = await query
             .OrderBy(t => t.SortOrder)
@@ -86,6 +106,7 @@ public static class TaskEndpoints
             .Include(t => t.Subtasks).ThenInclude(s => s.Assignee)
             .Include(t => t.Subtasks).ThenInclude(s => s.CreatedBy)
             .Include(t => t.Comments).ThenInclude(c => c.Author)
+            .Include(t => t.Tags)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
         if (task is null)
@@ -123,6 +144,13 @@ public static class TaskEndpoints
                 AuthorAvatarColor = c.Author.AvatarColor,
                 Text = c.Text,
                 CreatedAt = c.CreatedAt
+            }).ToList(),
+            Tags = task.Tags.OrderBy(tg => tg.Name).Select(tg => new TagDto
+            {
+                Id = tg.Id,
+                Name = tg.Name,
+                Color = tg.Color,
+                CreatedAt = tg.CreatedAt
             }).ToList()
         };
 
@@ -160,6 +188,12 @@ public static class TaskEndpoints
             UpdatedAt = DateTime.UtcNow
         };
 
+        if (request.TagIds is { Count: > 0 })
+        {
+            var tags = await db.Tags.Where(tg => request.TagIds.Contains(tg.Id)).ToListAsync(ct);
+            task.Tags = tags;
+        }
+
         db.TaskItems.Add(task);
         await db.SaveChangesAsync(ct);
 
@@ -170,6 +204,7 @@ public static class TaskEndpoints
             .Include(t => t.CreatedBy)
             .Include(t => t.Subtasks)
             .Include(t => t.Comments)
+            .Include(t => t.Tags)
             .FirstAsync(t => t.Id == task.Id, ct);
 
         return Results.Created($"/api/tasks/{task.Id}", ToDto(created));
@@ -185,7 +220,7 @@ public static class TaskEndpoints
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
             return Results.StatusCode(StatusCodes.Status403Forbidden);
 
-        var task = await db.TaskItems.FindAsync([id], ct);
+        var task = await db.TaskItems.Include(t => t.Tags).FirstOrDefaultAsync(t => t.Id == id, ct);
         if (task is null)
             return Results.NotFound();
 
@@ -197,6 +232,11 @@ public static class TaskEndpoints
         if (request.AssigneeId is not null) task.AssigneeId = request.AssigneeId;
         if (request.ParentTaskId is not null) task.ParentTaskId = request.ParentTaskId;
         if (request.DueDate is not null) task.DueDate = request.DueDate;
+        if (request.TagIds is not null)
+        {
+            var tags = await db.Tags.Where(tg => request.TagIds.Contains(tg.Id)).ToListAsync(ct);
+            task.Tags = tags;
+        }
 
         task.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -208,6 +248,7 @@ public static class TaskEndpoints
             .Include(t => t.CreatedBy)
             .Include(t => t.Subtasks)
             .Include(t => t.Comments)
+            .Include(t => t.Tags)
             .FirstAsync(t => t.Id == task.Id, ct);
 
         return Results.Ok(ToDto(updated));
@@ -233,6 +274,14 @@ public static class TaskEndpoints
             return Results.NotFound();
 
         var oldStatus = task.Status;
+        var currentUserId = GetUserId(context);
+
+        // Auto-assign when moving to non-Idea status without assignee
+        if (request.Status != TaskItemStatus.Idea && task.AssigneeId is null)
+        {
+            task.AssigneeId = currentUserId;
+        }
+
         task.Status = request.Status;
         task.UpdatedAt = DateTime.UtcNow;
 
@@ -250,9 +299,14 @@ public static class TaskEndpoints
 
         await db.SaveChangesAsync(ct);
 
+        // Reload assignee if it was auto-assigned
+        if (task.Assignee is null && task.AssigneeId is not null)
+        {
+            await db.Entry(task).Reference(t => t.Assignee).LoadAsync(ct);
+        }
+
         if (task.Assignee is not null && oldStatus != request.Status)
         {
-            var currentUserId = GetUserId(context);
             if (task.AssigneeId != currentUserId)
             {
                 var assignedBy = await db.Users.FindAsync([currentUserId], ct);
@@ -377,7 +431,14 @@ public static class TaskEndpoints
         UpdatedAt = t.UpdatedAt,
         SubTaskCount = t.Subtasks.Count,
         SubTaskDoneCount = t.Subtasks.Count(s => s.Status == TaskItemStatus.Done),
-        CommentCount = t.Comments.Count
+        CommentCount = t.Comments.Count,
+        Tags = t.Tags.OrderBy(tg => tg.Name).Select(tg => new TagDto
+        {
+            Id = tg.Id,
+            Name = tg.Name,
+            Color = tg.Color,
+            CreatedAt = tg.CreatedAt
+        }).ToList()
     };
 
     private static bool RequireAuth(HttpContext context)
