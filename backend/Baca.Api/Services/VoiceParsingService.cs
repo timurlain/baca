@@ -104,7 +104,7 @@ public sealed partial class VoiceParsingService(
 
         LogContextLoaded(activeUsers.Count, categories.Count);
 
-        var model = configuration["Anthropic:Model"] ?? configuration["Anthropic__Model"] ?? "claude-3-5-haiku-latest";
+        var model = configuration["Anthropic:Model"] ?? configuration["Anthropic__Model"] ?? "claude-haiku-4-5-20251001";
         LogUsingModel(model);
 
         var payload = new AnthropicRequest(
@@ -208,7 +208,7 @@ public sealed partial class VoiceParsingService(
             .ToListAsync(ct);
 
         var payload = new AnthropicRequest(
-            Model: configuration["Anthropic:Model"] ?? configuration["Anthropic__Model"] ?? "claude-3-5-haiku-latest",
+            Model: configuration["Anthropic:Model"] ?? configuration["Anthropic__Model"] ?? "claude-haiku-4-5-20251001",
             MaxTokens: 4000,
             System: BulkSystemPrompt,
             Messages:
