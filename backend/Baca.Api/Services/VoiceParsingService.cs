@@ -50,7 +50,21 @@ public sealed partial class VoiceParsingService(
         - 0.3–0.6 = hádání, fuzzy match
         - 0.0 = nebylo zmíněno, default hodnota
 
-        Odpověz POUZE validním JSON, bez dalšího textu.
+        Odpověz POUZE validním JSON v tomto formátu (bez dalšího textu, bez ```json bloků):
+        {
+          "title": "string",
+          "title_confidence": 0.0,
+          "description": "string|null",
+          "assignee_name": "string|null",
+          "assignee_confidence": 0.0,
+          "category_name": "string|null",
+          "category_confidence": 0.0,
+          "priority": "High|Medium|Low",
+          "priority_confidence": 0.0,
+          "due_date": "YYYY-MM-DD|null",
+          "due_date_confidence": 0.0,
+          "status": "Open"
+        }
         """;
 
     private const string BulkSystemPrompt =
@@ -81,7 +95,8 @@ public sealed partial class VoiceParsingService(
         - 0.3–0.6 = hádání, fuzzy match
         - 0.0 = nebylo zmíněno, default hodnota
 
-        Odpověz POUZE validním JSON POLEM objektů, bez dalšího textu.
+        Odpověz POUZE validním JSON POLEM objektů v tomto formátu (bez dalšího textu, bez ```json bloků):
+        [{"title":"string","title_confidence":0.0,"description":"string|null","assignee_name":"string|null","assignee_confidence":0.0,"category_name":"string|null","category_confidence":0.0,"priority":"High|Medium|Low","priority_confidence":0.0,"due_date":"YYYY-MM-DD|null","due_date_confidence":0.0,"status":"Open"}]
         """;
 
     public async Task<VoiceParseResponse> ParseTranscriptionAsync(string transcription, CancellationToken ct = default)
@@ -590,16 +605,37 @@ public sealed partial class VoiceParsingService(
 
     private sealed class RawVoiceParseResponse
     {
+        [JsonPropertyName("title")]
         public string? Title { get; set; }
+
+        [JsonPropertyName("description")]
         public string? Description { get; set; }
+
+        [JsonPropertyName("assignee_name")]
         public string? AssigneeName { get; set; }
+
+        [JsonPropertyName("assignee_confidence")]
         public double? AssigneeConfidence { get; set; }
+
+        [JsonPropertyName("category_name")]
         public string? CategoryName { get; set; }
+
+        [JsonPropertyName("category_confidence")]
         public double? CategoryConfidence { get; set; }
+
+        [JsonPropertyName("priority")]
         public string? Priority { get; set; }
+
+        [JsonPropertyName("priority_confidence")]
         public double? PriorityConfidence { get; set; }
+
+        [JsonPropertyName("due_date")]
         public string? DueDate { get; set; }
+
+        [JsonPropertyName("due_date_confidence")]
         public double? DueDateConfidence { get; set; }
+
+        [JsonPropertyName("status")]
         public string? Status { get; set; }
     }
 

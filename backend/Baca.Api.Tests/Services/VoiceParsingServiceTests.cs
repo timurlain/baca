@@ -39,7 +39,7 @@ public sealed class VoiceParsingServiceTests
         await dbContext.SaveChangesAsync();
         var service = CreateService(
             dbContext,
-            CreateAnthropicResponse("""{"title":"Připravit lano","assigneeName":"Honzík","assigneeConfidence":0.4,"status":"Open"}"""));
+            CreateAnthropicResponse("""{"title":"Připravit lano","assignee_name":"Honzík","assignee_confidence":0.4,"status":"Open"}"""));
 
         var response = await service.ParseTranscriptionAsync("Honzík připraví lano");
 
@@ -61,7 +61,7 @@ public sealed class VoiceParsingServiceTests
         await dbContext.SaveChangesAsync();
         var service = CreateService(
             dbContext,
-            CreateAnthropicResponse("""{"title":"Přivézt materiál","categoryName":"logistika","categoryConfidence":0.6,"status":"Open"}"""));
+            CreateAnthropicResponse("""{"title":"Přivézt materiál","category_name":"logistika","category_confidence":0.6,"status":"Open"}"""));
 
         var response = await service.ParseTranscriptionAsync("Materiál patří do logistiky");
 
@@ -75,7 +75,7 @@ public sealed class VoiceParsingServiceTests
         await using var dbContext = CreateDbContext();
         var service = CreateService(
             dbContext,
-            CreateAnthropicResponse("""{"title":"Urgentní úkol","priority":"High","priorityConfidence":0.9,"status":"Open"}"""));
+            CreateAnthropicResponse("""{"title":"Urgentní úkol","priority":"High","priority_confidence":0.9,"status":"Open"}"""));
 
         var response = await service.ParseTranscriptionAsync("Je to urgentní");
 
@@ -88,7 +88,7 @@ public sealed class VoiceParsingServiceTests
         await using var dbContext = CreateDbContext();
         var service = CreateService(
             dbContext,
-            CreateAnthropicResponse("""{"title":"Do pátku","dueDate":"2026-03-13","dueDateConfidence":0.8,"status":"Open"}"""));
+            CreateAnthropicResponse("""{"title":"Do pátku","due_date":"2026-03-13","due_date_confidence":0.8,"status":"Open"}"""));
 
         var response = await service.ParseTranscriptionAsync("Dodělat to do pátku");
 
@@ -101,7 +101,7 @@ public sealed class VoiceParsingServiceTests
         await using var dbContext = CreateDbContext();
         var service = CreateService(
             dbContext,
-            CreateAnthropicResponse("""{"title":"Úkol","assigneeName":"Neznámý","assigneeConfidence":0.8,"status":"Open"}"""));
+            CreateAnthropicResponse("""{"title":"Úkol","assignee_name":"Neznámý","assignee_confidence":0.8,"status":"Open"}"""));
 
         var response = await service.ParseTranscriptionAsync("Neznámý vyřeší úkol");
 
