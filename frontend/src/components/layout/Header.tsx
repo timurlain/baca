@@ -39,7 +39,7 @@ export default function Header() {
               Přehled
             </NavLink>
             <NavLink to="/board" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
-              Board
+              Tabule
             </NavLink>
             <NavLink to="/board/user" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
               Uživatelé
