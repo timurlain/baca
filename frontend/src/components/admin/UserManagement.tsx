@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react';
 import { users, auth } from '@/api/client';
 import { UserRole } from '@/types';
-import type { User, CreateUserRequest, AuthResponse } from '@/types';
+import type { User, CreateUserRequest, UpdateUserRequest, AuthResponse } from '@/types';
 import { ROLE_LABELS, ROLE_BADGE_CLASSES } from '@/utils/constants';
+import { getGravatarUrl } from '@/utils/helpers';
 import StatusMessage, { type Message } from './StatusMessage';
 import AdminNav from './AdminNav';
+import Avatar from '../shared/Avatar';
 
-interface AddUserFormProps {
+interface UserFormProps {
   onSubmit: (data: CreateUserRequest) => void;
   onCancel: () => void;
 }
 
-function AddUserForm({ onSubmit, onCancel }: AddUserFormProps) {
+function AddUserForm({ onSubmit, onCancel }: UserFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [shortcut, setShortcut] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.User);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -24,16 +27,25 @@ function AddUserForm({ onSubmit, onCancel }: AddUserFormProps) {
       email,
       phone: phone ? `+420${phone}` : null,
       role,
+      shortcut: shortcut || null,
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
       <h3 className="font-medium text-gray-900">Přidat uživatele</h3>
-      <div>
-        <label htmlFor="userName" className="block text-sm text-gray-600 mb-1">Jméno</label>
-        <input id="userName" type="text" required value={name} onChange={(e) => setName(e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="userName" className="block text-sm text-gray-600 mb-1">Jméno</label>
+          <input id="userName" type="text" required value={name} onChange={(e) => setName(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label htmlFor="userShortcut" className="block text-sm text-gray-600 mb-1">Zkratka (max 2 znaky)</label>
+          <input id="userShortcut" type="text" value={shortcut} onChange={(e) => setShortcut(e.target.value.slice(0, 2))}
+            maxLength={2} placeholder="JN"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
       </div>
       <div>
         <label htmlFor="userEmail" className="block text-sm text-gray-600 mb-1">Email</label>
@@ -69,18 +81,101 @@ function AddUserForm({ onSubmit, onCancel }: AddUserFormProps) {
   );
 }
 
+interface EditUserFormProps {
+  user: User;
+  onSave: (id: number, data: UpdateUserRequest) => void;
+  onCancel: () => void;
+  isSelf: boolean;
+}
+
+function EditUserForm({ user, onSave, onCancel, isSelf }: EditUserFormProps) {
+  const [name, setName] = useState(user.name);
+  const [phone, setPhone] = useState(user.phone?.replace('+420', '') ?? '');
+  const [shortcut, setShortcut] = useState(user.shortcut ?? '');
+  const [role, setRole] = useState<UserRole>(user.role);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(user.id, {
+      name,
+      phone: phone ? `+420${phone}` : '',
+      role,
+      shortcut: shortcut || null,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-blue-50 rounded-lg border border-blue-200 p-4 space-y-3">
+      <h3 className="font-medium text-gray-900">Upravit uživatele</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="editName" className="block text-sm text-gray-600 mb-1">Jméno</label>
+          <input id="editName" type="text" required value={name} onChange={(e) => setName(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label htmlFor="editShortcut" className="block text-sm text-gray-600 mb-1">Zkratka (max 2 znaky)</label>
+          <input id="editShortcut" type="text" value={shortcut} onChange={(e) => setShortcut(e.target.value.slice(0, 2))}
+            maxLength={2} placeholder="JN"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="editPhone" className="block text-sm text-gray-600 mb-1">Telefon</label>
+        <div className="flex">
+          <span className="inline-flex items-center px-3 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-gray-500 text-sm">+420</span>
+          <input id="editPhone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+            pattern="[0-9]{9}" placeholder="123456789"
+            className="flex-1 border border-gray-300 rounded-r-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="editRole" className="block text-sm text-gray-600 mb-1">Role</label>
+        <select id="editRole" value={role} onChange={(e) => setRole(e.target.value as UserRole)}
+          disabled={isSelf}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
+          <option value={UserRole.Admin}>Admin</option>
+          <option value={UserRole.User}>Uživatel</option>
+        </select>
+        {isSelf && <p className="text-xs text-gray-400 mt-1">Vlastní roli nelze změnit.</p>}
+      </div>
+      <div className="flex gap-2">
+        <button type="submit" className="flex-1 bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700">
+          Uložit
+        </button>
+        <button type="button" onClick={onCancel} className="flex-1 border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+          Zrušit
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function UserManagement() {
   const [userList, setUserList] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<AuthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
+  const [gravatarUrls, setGravatarUrls] = useState<Record<number, string>>({});
 
   useEffect(() => {
     Promise.all([users.list(), auth.me()])
       .then(([u, me]) => {
         setUserList(u);
         setCurrentUser(me);
+        // Compute Gravatar URLs asynchronously
+        Promise.all(u.map(async (user) => {
+          const url = await getGravatarUrl(user.email);
+          return [user.id, url] as const;
+        })).then((entries) => {
+          const urls: Record<number, string> = {};
+          for (const [id, url] of entries) {
+            if (url) urls[id] = url;
+          }
+          setGravatarUrls(urls);
+        });
       })
       .catch(() => setMessage({ text: 'Chyba načítání', type: 'error' }))
       .finally(() => setLoading(false));
@@ -94,6 +189,18 @@ export default function UserManagement() {
       setMessage({ text: 'Uživatel přidán', type: 'success' });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Chyba při přidávání uživatele';
+      setMessage({ text: msg, type: 'error' });
+    }
+  };
+
+  const handleEditUser = async (id: number, data: UpdateUserRequest) => {
+    try {
+      const updated = await users.update(id, data);
+      setUserList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      setEditingUser(null);
+      setMessage({ text: 'Uživatel upraven', type: 'success' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Chyba při úpravě uživatele';
       setMessage({ text: msg, type: 'error' });
     }
   };
@@ -129,7 +236,7 @@ export default function UserManagement() {
       <AdminNav />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Správa uživatelů</h1>
-        {!showForm && (
+        {!showForm && !editingUser && (
           <button
             onClick={() => setShowForm(true)}
             className="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700"
@@ -142,6 +249,14 @@ export default function UserManagement() {
       <StatusMessage message={message} />
 
       {showForm && <AddUserForm onSubmit={handleAddUser} onCancel={() => setShowForm(false)} />}
+      {editingUser && (
+        <EditUserForm
+          user={editingUser}
+          onSave={handleEditUser}
+          onCancel={() => setEditingUser(null)}
+          isSelf={currentUser !== null && editingUser.id === currentUser.id}
+        />
+      )}
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -161,12 +276,13 @@ export default function UserManagement() {
                 <tr key={user.id} className="border-b border-gray-100 last:border-0">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-medium"
-                        style={{ backgroundColor: user.avatarColor }}
-                      >
-                        {user.name.charAt(0).toUpperCase()}
-                      </span>
+                      <Avatar
+                        name={user.name}
+                        shortcut={user.shortcut}
+                        imageUrl={gravatarUrls[user.id]}
+                        color={user.avatarColor}
+                        size="sm"
+                      />
                       {user.name}
                     </div>
                   </td>
@@ -185,11 +301,18 @@ export default function UserManagement() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
+                        onClick={() => { setEditingUser(user); setShowForm(false); }}
+                        className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1"
+                        title="Upravit uživatele"
+                      >
+                        Upravit
+                      </button>
+                      <button
                         onClick={() => handleResendLink(user.id)}
                         className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1"
                         title="Znovu odeslat odkaz"
                       >
-                        Odeslat odkaz
+                        Odkaz
                       </button>
                       <button
                         onClick={() => handleToggleActive(user)}

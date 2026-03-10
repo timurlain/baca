@@ -290,7 +290,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                 <div>
                   <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Řešitel</h4>
                   <div className="flex items-center space-x-2">
-                    <Avatar name={task.assigneeName} color={task.assigneeAvatarColor} size="sm" />
+                    <Avatar name={task.assigneeName} shortcut={task.assigneeShortcut} color={task.assigneeAvatarColor} size="sm" />
                     <select
                       disabled={isGuest}
                       className="flex-1 text-xs font-medium py-1.5 px-2 rounded border border-gray-200 bg-white truncate"

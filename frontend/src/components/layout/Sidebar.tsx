@@ -43,11 +43,12 @@ export default function Sidebar({
               selectedUserId === user.id ? "bg-forest-50 text-forest-800 border-r-4 border-forest-600" : "text-gray-600 hover:bg-gray-50"
             )}
           >
-            <Avatar 
-              name={user.name} 
-              color={user.avatarColor} 
-              size="sm" 
-              className="mr-3" 
+            <Avatar
+              name={user.name}
+              shortcut={user.shortcut}
+              color={user.avatarColor}
+              size="sm"
+              className="mr-3"
             />
             <div className="text-left overflow-hidden">
               <div className="truncate">{user.name}</div>

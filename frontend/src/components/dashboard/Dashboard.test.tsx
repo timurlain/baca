@@ -26,7 +26,7 @@ const fullMock: DashboardData = {
     {
       id: 1, title: 'Testový úkol', description: null, status: 'Open' as const, priority: 'High' as const,
       categoryId: 1, categoryName: 'Hra', categoryColor: '#3B82F6',
-      assigneeId: null, assigneeName: null, assigneeAvatarColor: null,
+      assigneeId: null, assigneeName: null, assigneeAvatarColor: null, assigneeShortcut: null,
       parentTaskId: null, dueDate: null, sortOrder: 0,
       createdById: 1, createdByName: 'Tomáš',
       createdAt: '2026-03-01T00:00:00Z', updatedAt: '2026-03-01T00:00:00Z',

@@ -36,7 +36,7 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center space-x-4">
             <NavLink to="/dashboard" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
-              Dashboard
+              Přehled
             </NavLink>
             <NavLink to="/board" className={({ isActive }) => `text-sm font-medium hover:text-green-200 transition-colors ${isActive ? 'text-white border-b-2 border-white' : 'text-green-100'}`}>
               Board

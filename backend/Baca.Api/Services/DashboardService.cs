@@ -79,6 +79,7 @@ public sealed class DashboardService(BacaDbContext dbContext, TimeProvider timeP
                 CategoryColor = task.Category != null ? task.Category.Color : null,
                 AssigneeId = task.AssigneeId,
                 AssigneeName = task.Assignee != null ? task.Assignee.Name : null,
+                AssigneeShortcut = task.Assignee != null ? task.Assignee.Shortcut : null,
                 AssigneeAvatarColor = task.Assignee != null ? task.Assignee.AvatarColor : null,
                 ParentTaskId = task.ParentTaskId,
                 DueDate = task.DueDate,

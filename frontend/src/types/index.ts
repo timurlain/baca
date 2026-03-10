@@ -31,6 +31,7 @@ export interface User {
   role: UserRole;
   gameRoleId: number | null;
   gameRoleName: string | null;
+  shortcut: string | null;
   avatarColor: string;
   isActive: boolean;
   createdAt: string;
@@ -42,6 +43,7 @@ export interface CreateUserRequest {
   phone: string | null;
   role: UserRole;
   gameRoleId?: number | null;
+  shortcut?: string | null;
 }
 
 export interface UpdateUserRequest {
@@ -50,6 +52,7 @@ export interface UpdateUserRequest {
   role?: UserRole;
   gameRoleId?: number | null;
   isActive?: boolean;
+  shortcut?: string | null;
 }
 
 // Task
@@ -64,6 +67,7 @@ export interface TaskItem {
   categoryColor: string | null;
   assigneeId: number | null;
   assigneeName: string | null;
+  assigneeShortcut: string | null;
   assigneeAvatarColor: string | null;
   parentTaskId: number | null;
   dueDate: string | null;
@@ -88,6 +92,7 @@ export interface TaskDetail {
   categoryColor: string | null;
   assigneeId: number | null;
   assigneeName: string | null;
+  assigneeShortcut: string | null;
   assigneeAvatarColor: string | null;
   parentTaskId: number | null;
   parentTaskTitle: string | null;

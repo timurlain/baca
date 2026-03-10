@@ -27,6 +27,7 @@ const mockTaskDetail: TaskDetail = {
   assigneeId: 1,
   assigneeName: 'Tomáš',
   assigneeAvatarColor: '#10B981',
+  assigneeShortcut: null,
   parentTaskId: null,
   parentTaskTitle: null,
   dueDate: '2026-05-01T00:00:00Z',
@@ -40,8 +41,8 @@ const mockTaskDetail: TaskDetail = {
 };
 
 const mockUsers: User[] = [
-  { id: 1, name: 'Tomáš', email: 'tomas@baca.local', phone: null, role: UserRole.Admin, gameRoleId: null, gameRoleName: null, avatarColor: '#10B981', isActive: true, createdAt: '2026-01-01T00:00:00Z' },
-  { id: 2, name: 'Jana', email: 'jana@baca.local', phone: null, role: UserRole.User, gameRoleId: null, gameRoleName: null, avatarColor: '#3B82F6', isActive: true, createdAt: '2026-01-02T00:00:00Z' },
+  { id: 1, name: 'Tomáš', email: 'tomas@baca.local', phone: null, role: UserRole.Admin, gameRoleId: null, gameRoleName: null, avatarColor: '#10B981', isActive: true, createdAt: '2026-01-01T00:00:00Z', shortcut: 'TO' },
+  { id: 2, name: 'Jana', email: 'jana@baca.local', phone: null, role: UserRole.User, gameRoleId: null, gameRoleName: null, avatarColor: '#3B82F6', isActive: true, createdAt: '2026-01-02T00:00:00Z', shortcut: null },
 ];
 
 const mockCategories: Category[] = [

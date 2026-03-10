@@ -11,6 +11,7 @@ public class UserDto
     public required UserRole Role { get; set; }
     public int? GameRoleId { get; set; }
     public string? GameRoleName { get; set; }
+    public string? Shortcut { get; set; }
     public required string AvatarColor { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -23,6 +24,7 @@ public class CreateUserRequest
     public string? Phone { get; set; }
     public required UserRole Role { get; set; }
     public int? GameRoleId { get; set; }
+    public string? Shortcut { get; set; }
 }
 
 public class UpdateUserRequest
@@ -32,4 +34,5 @@ public class UpdateUserRequest
     public UserRole? Role { get; set; }
     public int? GameRoleId { get; set; }
     public bool? IsActive { get; set; }
+    public string? Shortcut { get; set; }
 }
