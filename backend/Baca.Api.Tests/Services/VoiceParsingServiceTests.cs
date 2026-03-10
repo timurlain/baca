@@ -7,6 +7,7 @@ using Baca.Api.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Baca.Api.Tests.Services;
 
@@ -155,7 +156,8 @@ public sealed class VoiceParsingServiceTests
             dbContext,
             httpClient,
             configuration,
-            new FakeTimeProvider(new DateTimeOffset(2026, 3, 8, 12, 0, 0, TimeSpan.Zero)));
+            new FakeTimeProvider(new DateTimeOffset(2026, 3, 8, 12, 0, 0, TimeSpan.Zero)),
+            NullLogger<VoiceParsingService>.Instance);
     }
 
     private static HttpResponseMessage CreateAnthropicResponse(string text)

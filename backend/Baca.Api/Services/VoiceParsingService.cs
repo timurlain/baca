@@ -10,11 +10,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Baca.Api.Services;
 
-public sealed class VoiceParsingService(
+public sealed partial class VoiceParsingService(
     BacaDbContext dbContext,
     HttpClient httpClient,
     IConfiguration configuration,
-    TimeProvider timeProvider) : IVoiceParsingService
+    TimeProvider timeProvider,
+    ILogger<VoiceParsingService> logger) : IVoiceParsingService
 {
     private const string AnthropicVersion = "2023-06-01";
 
@@ -85,6 +86,8 @@ public sealed class VoiceParsingService(
 
     public async Task<VoiceParseResponse> ParseTranscriptionAsync(string transcription, CancellationToken ct = default)
     {
+        LogParseStarted(transcription);
+
         var activeUsers = await dbContext.Users
             .AsNoTracking()
             .Where(user => user.IsActive)
@@ -99,8 +102,13 @@ public sealed class VoiceParsingService(
             .Select(category => new LookupItem(category.Id, category.Name))
             .ToListAsync(ct);
 
+        LogContextLoaded(activeUsers.Count, categories.Count);
+
+        var model = configuration["Anthropic:Model"] ?? configuration["Anthropic__Model"] ?? "claude-3-5-haiku-latest";
+        LogUsingModel(model);
+
         var payload = new AnthropicRequest(
-            Model: configuration["Anthropic:Model"] ?? configuration["Anthropic__Model"] ?? "claude-3-5-haiku-latest",
+            Model: model,
             MaxTokens: 500,
             System: SystemPrompt,
             Messages:
@@ -111,6 +119,7 @@ public sealed class VoiceParsingService(
             ]);
 
         var apiKey = GetAnthropicApiKey();
+        LogApiKeyLoaded(apiKey.Length);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages")
         {
@@ -119,10 +128,14 @@ public sealed class VoiceParsingService(
         request.Headers.Add("x-api-key", apiKey);
         request.Headers.Add("anthropic-version", AnthropicVersion);
 
+        LogSendingToAnthropic();
         using var response = await httpClient.SendAsync(request, ct);
+        LogAnthropicResponse((int)response.StatusCode);
+
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync(ct);
+            LogAnthropicError((int)response.StatusCode, errorBody);
             throw new InvalidOperationException(
                 $"Anthropic API call failed with status {(int)response.StatusCode}: {errorBody}");
         }
@@ -132,12 +145,17 @@ public sealed class VoiceParsingService(
             .FirstOrDefault(block => string.Equals(block.Type, "text", StringComparison.OrdinalIgnoreCase))
             ?.Text;
 
+        LogAnthropicRawResponse(textPayload);
+
         if (string.IsNullOrWhiteSpace(textPayload))
         {
+            LogEmptyAnthropicResponse();
             return CreateFallbackResponse(transcription);
         }
 
         var parsedResponse = TryParseResponse(textPayload, transcription);
+        var priorityText = parsedResponse.Priority?.ToString();
+        LogParsedResult(parsedResponse.Title, parsedResponse.AssigneeName, parsedResponse.CategoryName, priorityText);
         ApplyLookupMatch(
             parsedResponse.AssigneeName,
             activeUsers,
@@ -584,4 +602,35 @@ public sealed class VoiceParsingService(
         public double? DueDateConfidence { get; set; }
         public string? Status { get; set; }
     }
+
+    // LoggerMessage source-generated delegates
+    [LoggerMessage(Level = LogLevel.Debug, Message = "ParseTranscriptionAsync started. Transcription='{Transcription}'")]
+    private partial void LogParseStarted(string transcription);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Loaded {UserCount} users, {CategoryCount} categories for context")]
+    private partial void LogContextLoaded(int userCount, int categoryCount);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Using Anthropic model: {Model}")]
+    private partial void LogUsingModel(string model);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Anthropic API key loaded (length={KeyLength})")]
+    private partial void LogApiKeyLoaded(int keyLength);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Sending request to Anthropic API...")]
+    private partial void LogSendingToAnthropic();
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Anthropic API response: Status={StatusCode}")]
+    private partial void LogAnthropicResponse(int statusCode);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Anthropic API error: Status={StatusCode}, Body={ErrorBody}")]
+    private partial void LogAnthropicError(int statusCode, string errorBody);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Anthropic raw response text: '{ResponseText}'")]
+    private partial void LogAnthropicRawResponse(string? responseText);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Anthropic returned empty text payload, using fallback response")]
+    private partial void LogEmptyAnthropicResponse();
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Parsed: Title='{Title}', Assignee='{Assignee}', Category='{Category}', Priority={Priority}")]
+    private partial void LogParsedResult(string? title, string? assignee, string? category, string? priority);
 }
