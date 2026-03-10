@@ -92,8 +92,9 @@ export default function UserManagement() {
       setUserList((prev) => [...prev, newUser]);
       setShowForm(false);
       setMessage({ text: 'Uživatel přidán', type: 'success' });
-    } catch {
-      setMessage({ text: 'Chyba při přidávání uživatele', type: 'error' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Chyba při přidávání uživatele';
+      setMessage({ text: msg, type: 'error' });
     }
   };
 

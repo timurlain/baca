@@ -107,7 +107,15 @@ public static class UserEndpoints
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync(ct);
 
-        await emailService.SendMagicLinkAsync(email, user.Name, token.Token, ct);
+        try
+        {
+            await emailService.SendMagicLinkAsync(email, user.Name, token.Token, ct);
+        }
+        catch
+        {
+            // User is already saved — don't fail the request if email sending fails.
+            // Admin can resend the link later.
+        }
 
         await dbContext.Entry(user)
             .Reference(createdUser => createdUser.GameRole)
