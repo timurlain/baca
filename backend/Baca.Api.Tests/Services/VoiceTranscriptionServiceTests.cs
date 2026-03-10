@@ -1,6 +1,7 @@
 using Baca.Api.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Baca.Api.Tests.Services;
 
@@ -13,7 +14,7 @@ public sealed class VoiceTranscriptionServiceTests
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
-        var service = new VoiceTranscriptionService(config);
+        var service = new VoiceTranscriptionService(config, NullLogger<VoiceTranscriptionService>.Instance);
 
         using var stream = new MemoryStream([0x52, 0x49, 0x46, 0x46]);
         var act = async () => await service.TranscribeAsync(stream, "audio/wav");
@@ -32,7 +33,7 @@ public sealed class VoiceTranscriptionServiceTests
             })
             .Build();
 
-        var service = new VoiceTranscriptionService(config);
+        var service = new VoiceTranscriptionService(config, NullLogger<VoiceTranscriptionService>.Instance);
 
         using var stream = new MemoryStream([0x52, 0x49, 0x46, 0x46]);
         var act = async () => await service.TranscribeAsync(stream, "audio/wav");
@@ -53,7 +54,7 @@ public sealed class VoiceTranscriptionServiceTests
             })
             .Build();
 
-        var service = new VoiceTranscriptionService(config);
+        var service = new VoiceTranscriptionService(config, NullLogger<VoiceTranscriptionService>.Instance);
 
         // This will fail at the Azure SDK level (invalid key), but should not throw
         // on config resolution. We verify it gets past the config check.
@@ -85,7 +86,7 @@ public sealed class VoiceTranscriptionServiceTests
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
-        var act = () => new VoiceTranscriptionService(config);
+        var act = () => new VoiceTranscriptionService(config, NullLogger<VoiceTranscriptionService>.Instance);
 
         act.Should().NotThrow("Construction should be lazy, not validating config");
     }

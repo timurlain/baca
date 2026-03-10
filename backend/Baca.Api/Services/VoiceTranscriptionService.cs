@@ -5,19 +5,25 @@ using Microsoft.CognitiveServices.Speech.Audio;
 
 namespace Baca.Api.Services;
 
-public sealed class VoiceTranscriptionService(IConfiguration configuration) : IVoiceTranscriptionService
+public sealed partial class VoiceTranscriptionService(
+    IConfiguration configuration,
+    ILogger<VoiceTranscriptionService> logger) : IVoiceTranscriptionService
 {
     public async Task<TranscriptionResult> TranscribeAsync(
         Stream audioStream,
         string contentType,
         CancellationToken ct = default)
     {
+        LogTranscribeStarted(contentType, audioStream.CanSeek ? audioStream.Length : -1);
+
         var speechKey = configuration["Azure:Speech:Key"]
             ?? configuration["Azure__Speech__Key"]
             ?? throw new InvalidOperationException("Azure Speech key is not configured.");
         var speechRegion = configuration["Azure:Speech:Region"]
             ?? configuration["Azure__Speech__Region"]
             ?? throw new InvalidOperationException("Azure Speech region is not configured.");
+
+        LogSpeechConfig(speechRegion, speechKey.Length);
 
         var temporaryDirectory = Path.Combine(Path.GetTempPath(), "baca-voice");
         Directory.CreateDirectory(temporaryDirectory);
@@ -26,28 +32,48 @@ public sealed class VoiceTranscriptionService(IConfiguration configuration) : IV
         var inputPath = Path.Combine(temporaryDirectory, $"{Guid.NewGuid():N}{inputExtension}");
         var wavPath = Path.Combine(temporaryDirectory, $"{Guid.NewGuid():N}.wav");
 
+        LogSavingAudio(inputPath, inputExtension);
+
         await using (var fileStream = File.Create(inputPath))
         {
             await audioStream.CopyToAsync(fileStream, ct);
+        }
+
+        var inputFileSize = new FileInfo(inputPath).Length;
+        LogAudioSaved(inputFileSize);
+
+        if (inputFileSize == 0)
+        {
+            LogEmptyAudio();
+            throw new InvalidOperationException("Audio file is empty.");
         }
 
         try
         {
             if (IsWaveContentType(contentType))
             {
+                LogAlreadyWav(wavPath);
                 File.Move(inputPath, wavPath, overwrite: true);
             }
             else
             {
+                LogConvertingAudio(contentType);
                 await ConvertToWaveAsync(inputPath, wavPath, ct);
+                var wavSize = new FileInfo(wavPath).Length;
+                LogConversionComplete(wavSize);
             }
 
+            LogCreatingRecognizer();
             var speechConfig = SpeechConfig.FromSubscription(speechKey, speechRegion);
             speechConfig.SpeechRecognitionLanguage = "cs-CZ";
 
             using var audioConfig = AudioConfig.FromWavFileInput(wavPath);
             using var recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+
+            LogRecognizing();
             var result = await recognizer.RecognizeOnceAsync();
+            var reasonText = result.Reason.ToString();
+            LogRecognitionResult(reasonText, result.Text);
 
             return result.Reason switch
             {
@@ -57,8 +83,13 @@ public sealed class VoiceTranscriptionService(IConfiguration configuration) : IV
                 },
                 ResultReason.NoMatch => throw new InvalidOperationException("Azure Speech did not recognize any speech."),
                 ResultReason.Canceled => throw CreateSpeechCancellationException(result),
-                _ => throw new InvalidOperationException("Azure Speech returned an unexpected recognition result.")
+                _ => throw new InvalidOperationException($"Azure Speech returned an unexpected recognition result: {result.Reason}.")
             };
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            LogTranscriptionError(ex);
+            throw;
         }
         finally
         {
@@ -67,12 +98,16 @@ public sealed class VoiceTranscriptionService(IConfiguration configuration) : IV
         }
     }
 
-    private static async Task ConvertToWaveAsync(string inputPath, string wavPath, CancellationToken ct)
+    private async Task ConvertToWaveAsync(string inputPath, string wavPath, CancellationToken ct)
     {
+        var ffmpegPath = ResolveFfmpegPath();
+        var arguments = $"-y -i \"{inputPath}\" -ac 1 -ar 16000 -sample_fmt s16 \"{wavPath}\"";
+        LogFfmpegCommand(ffmpegPath, arguments);
+
         var startInfo = new ProcessStartInfo
         {
-            FileName = ResolveFfmpegPath(),
-            Arguments = $"-y -i \"{inputPath}\" -ac 1 -ar 16000 -sample_fmt s16 \"{wavPath}\"",
+            FileName = ffmpegPath,
+            Arguments = arguments,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             UseShellExecute = false,
@@ -86,11 +121,14 @@ public sealed class VoiceTranscriptionService(IConfiguration configuration) : IV
         if (process.ExitCode != 0 || !File.Exists(wavPath))
         {
             var errorText = await process.StandardError.ReadToEndAsync(ct);
+            LogFfmpegFailed(process.ExitCode, errorText);
             throw new InvalidOperationException($"Audio conversion to WAV failed: {errorText}");
         }
+
+        LogFfmpegSuccess();
     }
 
-    private static string ResolveFfmpegPath()
+    private string ResolveFfmpegPath()
     {
         var candidates = OperatingSystem.IsWindows()
             ? new[] { "ffmpeg.exe", "ffmpeg" }
@@ -112,14 +150,16 @@ public sealed class VoiceTranscriptionService(IConfiguration configuration) : IV
 
                 using var process = Process.Start(startInfo);
                 process?.Kill(entireProcessTree: true);
+                LogFfmpegResolved(candidate);
                 return candidate;
             }
             catch
             {
-                // Continue probing candidates.
+                LogFfmpegCandidateNotFound(candidate);
             }
         }
 
+        LogFfmpegNotFound();
         throw new InvalidOperationException("ffmpeg is required to transcribe non-WAV audio.");
     }
 
@@ -155,4 +195,59 @@ public sealed class VoiceTranscriptionService(IConfiguration configuration) : IV
             File.Delete(path);
         }
     }
+
+    // LoggerMessage source-generated delegates
+    [LoggerMessage(Level = LogLevel.Debug, Message = "TranscribeAsync started. ContentType={ContentType}, StreamLength={Length}")]
+    private partial void LogTranscribeStarted(string contentType, long length);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Azure Speech config: Region={Region}, KeyLength={KeyLength}")]
+    private partial void LogSpeechConfig(string region, int keyLength);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Saving audio to {InputPath} (ext={Extension})")]
+    private partial void LogSavingAudio(string inputPath, string extension);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Audio file saved: {Size} bytes")]
+    private partial void LogAudioSaved(long size);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Audio file is empty (0 bytes). Aborting transcription.")]
+    private partial void LogEmptyAudio();
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Audio is already WAV, moving to {WavPath}")]
+    private partial void LogAlreadyWav(string wavPath);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Converting {ContentType} to WAV via ffmpeg")]
+    private partial void LogConvertingAudio(string contentType);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "WAV conversion complete: {Size} bytes")]
+    private partial void LogConversionComplete(long size);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Creating SpeechRecognizer (language=cs-CZ)")]
+    private partial void LogCreatingRecognizer();
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Calling RecognizeOnceAsync...")]
+    private partial void LogRecognizing();
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "RecognizeOnceAsync result: Reason={Reason}, Text='{Text}'")]
+    private partial void LogRecognitionResult(string reason, string text);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Unexpected error during transcription")]
+    private partial void LogTranscriptionError(Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Running ffmpeg: {Path} {Args}")]
+    private partial void LogFfmpegCommand(string path, string args);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "ffmpeg failed (exit={ExitCode}): {Error}")]
+    private partial void LogFfmpegFailed(int exitCode, string error);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "ffmpeg completed successfully (exit=0)")]
+    private partial void LogFfmpegSuccess();
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "ffmpeg resolved at: {Path}")]
+    private partial void LogFfmpegResolved(string path);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "ffmpeg candidate '{Candidate}' not found")]
+    private partial void LogFfmpegCandidateNotFound(string candidate);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "ffmpeg not found on PATH")]
+    private partial void LogFfmpegNotFound();
 }
