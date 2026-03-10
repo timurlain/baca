@@ -65,8 +65,9 @@ export default function useVoiceFlow(): UseVoiceFlowResult {
           const result = await voice.parse({ transcription });
           setParsed(result);
           setFlowState('preview');
-        } catch {
-          setProcessingError('Nepodařilo se zpracovat nahrávku');
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : '';
+          setProcessingError(msg || 'Nepodařilo se zpracovat nahrávku');
           setFlowState('idle');
           recorder.reset();
         } finally {

@@ -204,6 +204,11 @@ jobs:
           resourceGroup: ovcina
           imageToDeploy: ovcinaacr.azurecr.io/baca-web:${{ github.sha }}
 
+      - name: Set min replicas to 1 (avoid cold starts)
+        run: |
+          az containerapp update -n baca-api -g ovcina --min-replicas 1 --output none
+          az containerapp update -n baca-web -g ovcina --min-replicas 1 --output none
+
       - name: Sync secrets to baca-api
         run: |
           if [ -n "$ANTHROPIC_KEY" ]; then
@@ -213,8 +218,9 @@ jobs:
             az containerapp update -n baca-api -g ovcina \
               --set-env-vars "Anthropic__ApiKey=secretref:anthropic-key" \
               --output none
+            echo "Anthropic key configured successfully"
           else
-            echo "ANTHROPHICAPI secret not configured, skipping"
+            echo "WARNING: ANTHROPIC_KEY secret not found in GitHub secrets"
           fi
         env:
-          ANTHROPIC_KEY: ${{ secrets.ANTHROPHICAPI }}
+          ANTHROPIC_KEY: ${{ secrets['ANTHROPIC-KEY'] }}
