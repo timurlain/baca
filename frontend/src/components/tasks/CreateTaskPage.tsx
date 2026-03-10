@@ -51,8 +51,9 @@ export default function CreateTaskPage() {
       } else {
         setParsedTasks(result.tasks);
       }
-    } catch {
-      setBulkError('Nepoda\u0159ilo se zpracovat text. Zkuste to znovu.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      setBulkError(msg ? `Chyba: ${msg}` : 'Nepodařilo se zpracovat text. Zkuste to znovu.');
     } finally {
       setBulkParsing(false);
     }

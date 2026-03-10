@@ -59,8 +59,19 @@ public static class VoiceEndpoints
             return Results.BadRequest("Transcription is required.");
         }
 
-        var response = await voiceParsingService.ParseTranscriptionAsync(request.Transcription.Trim(), ct);
-        return TypedResults.Ok(response);
+        try
+        {
+            var response = await voiceParsingService.ParseTranscriptionAsync(request.Transcription.Trim(), ct);
+            return TypedResults.Ok(response);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Problem("AI služba není nakonfigurována. Kontaktujte administrátora.", statusCode: 503);
+        }
+        catch (HttpRequestException)
+        {
+            return Results.Problem("Nepodařilo se spojit s AI službou. Zkuste to později.", statusCode: 502);
+        }
     }
 
     private static async Task<IResult> ParseBulkAsync(
@@ -79,7 +90,18 @@ public static class VoiceEndpoints
             return Results.BadRequest("Text is required.");
         }
 
-        var response = await voiceParsingService.ParseBulkTextAsync(request.Text.Trim(), ct);
-        return TypedResults.Ok(response);
+        try
+        {
+            var response = await voiceParsingService.ParseBulkTextAsync(request.Text.Trim(), ct);
+            return TypedResults.Ok(response);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("API key", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Problem("AI služba není nakonfigurována. Kontaktujte administrátora.", statusCode: 503);
+        }
+        catch (HttpRequestException)
+        {
+            return Results.Problem("Nepodařilo se spojit s AI službou. Zkuste to později.", statusCode: 502);
+        }
     }
 }
