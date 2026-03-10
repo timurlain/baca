@@ -27,7 +27,7 @@ describe('BottomTabBar', () => {
       </BrowserRouter>
     );
     expect(screen.getByText('Fokus')).toBeInTheDocument();
-    expect(screen.getByText('Board')).toBeInTheDocument();
+    expect(screen.getByText('Tabule')).toBeInTheDocument();
     expect(screen.getByText('Hlas')).toBeInTheDocument();
     expect(screen.getByText('Staty')).toBeInTheDocument();
   });

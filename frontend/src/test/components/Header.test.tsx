@@ -37,7 +37,7 @@ describe('Header', () => {
       </BrowserRouter>
     );
     expect(screen.getByText('Přehled')).toBeInTheDocument();
-    expect(screen.getByText('Board')).toBeInTheDocument();
+    expect(screen.getByText('Tabule')).toBeInTheDocument();
   });
 
   it('renders task count badge', () => {
