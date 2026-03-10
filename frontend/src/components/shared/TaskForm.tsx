@@ -87,16 +87,13 @@ export default function TaskForm({
         assigneeId: assigneeId ?? undefined,
         categoryId: categoryId ?? undefined,
         priority,
-        dueDate: dueDate || undefined,
+        dueDate: dueDate ? `${dueDate}T00:00:00` : undefined,
         status,
       };
       await onSubmit(req);
-      // Reset form fields after successful submit (keep status)
+      // Reset only title, description, dueDate — keep category, priority, assignee, status
       setTitle('');
       setDescription('');
-      setAssigneeId(null);
-      setCategoryId(null);
-      setPriority(Priority.Medium);
       setDueDate('');
     } catch {
       setError('Nepodařilo se vytvořit úkol');

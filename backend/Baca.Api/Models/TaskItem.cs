@@ -32,6 +32,9 @@ public class TaskItem
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+
     // Navigation properties
     public Category? Category { get; set; }
     public User? Assignee { get; set; }

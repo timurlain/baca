@@ -147,7 +147,8 @@ public static class TagEndpoints
             return Results.NotFound();
         }
 
-        dbContext.Tags.Remove(tag);
+        tag.IsDeleted = true;
+        tag.DeletedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(ct);
         return Results.Ok();
     }

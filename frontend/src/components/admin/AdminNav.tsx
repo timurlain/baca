@@ -6,6 +6,7 @@ const adminLinks = [
   { to: '/admin/tags', label: 'Značky' },
   { to: '/admin/gameroles', label: 'Herní role' },
   { to: '/admin/settings', label: 'Nastavení' },
+  { to: '/admin/trash', label: 'Koš' },
 ];
 
 export default function AdminNav() {

@@ -242,7 +242,9 @@ public static class UserEndpoints
             return Results.Conflict("Uživatele s přiřazenými úkoly lze pouze deaktivovat.");
         }
 
-        dbContext.Users.Remove(user);
+        user.IsDeleted = true;
+        user.DeletedAt = DateTime.UtcNow;
+        user.IsActive = false;
         await dbContext.SaveChangesAsync(ct);
         return Results.Ok();
     }

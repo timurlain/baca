@@ -30,6 +30,9 @@ public class User
 
     public bool IsActive { get; set; } = true;
 
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+
     // Navigation properties
     public GameRole? GameRole { get; set; }
     public ICollection<TaskItem> AssignedTasks { get; set; } = [];
