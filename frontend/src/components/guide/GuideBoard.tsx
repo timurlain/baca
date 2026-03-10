@@ -28,6 +28,20 @@ export default function GuideBoard() {
       </div>
 
       <div className="space-y-3">
+        <h2 className="text-lg font-bold text-gray-900">Vytváření úkolů</h2>
+        <p className="text-gray-700">
+          Nový úkol vytvoříš tlačítkem <strong>„+ Nový úkol"</strong> v hlavičce boardu. Tlačítko <strong>„+"</strong> v záhlaví sloupce vytvoří úkol s předvyplněným stavem daného sloupce.
+        </p>
+        <p className="text-gray-700">
+          Stránka <Link to="/tasks/new" className="text-forest-700 font-medium hover:underline">Nový úkol</Link> má dvě záložky:
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-gray-700">
+          <li><strong>Jeden úkol</strong> — klasický formulář pro jeden úkol.</li>
+          <li><strong>Hromadný import</strong> — vlož text nebo tabulku, AI je rozparsuje na úkoly. Výsledek si před uložením zkontroluj v editovatelné tabulce.</li>
+        </ul>
+      </div>
+
+      <div className="space-y-3">
         <h2 className="text-lg font-bold text-gray-900">Přesouvání úkolů</h2>
         <p className="text-gray-700">
           Na počítači přetáhni kartičku myší z jednoho sloupce do druhého. Na mobilu podrž prst na kartičce a přetáhni ji.
@@ -41,6 +55,9 @@ export default function GuideBoard() {
         </p>
         <p className="text-gray-700">
           Tlačítkem <strong>„Vezmu si to"</strong> si úkol přiřadíš. Ostatní uvidí, že na něm pracuješ.
+        </p>
+        <p className="text-gray-700">
+          V detailu můžeš také přidávat a spravovat <strong>podúkoly (subtasky)</strong> — rozděl si práci na menší kroky.
         </p>
       </div>
 

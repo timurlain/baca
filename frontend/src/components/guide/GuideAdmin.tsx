@@ -4,7 +4,7 @@ export default function GuideAdmin() {
       <h1 className="text-2xl font-bold text-gray-900">Správa</h1>
 
       <p className="text-gray-700">
-        Sekce <strong>Admin</strong> je dostupná jen pro administrátory. Najdeš tu správu uživatelů, kategorií, herních rolí a nastavení aplikace.
+        Sekce <strong>Admin</strong> je dostupná jen pro administrátory. Najdeš tu správu uživatelů, kategorií, herních rolí a nastavení aplikace. Mezi jednotlivými stránkami se přepínáš pomocí navigace nahoře (Uživatelé, Kategorie, Herní role).
       </p>
 
       <div className="space-y-3">
@@ -29,6 +29,17 @@ export default function GuideAdmin() {
           <li>Přidat novou kategorii s názvem a barvou.</li>
           <li>Upravit existující kategorie.</li>
           <li>Smazat kategorii (pouze pokud nemá přiřazené úkoly).</li>
+        </ul>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-bold text-gray-900">Herní role</h2>
+        <p className="text-gray-700">
+          V sekci <strong>Herní role</strong> spravuješ role, které se přiřazují účastníkům hry. Můžeš:
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-gray-700">
+          <li>Přidat novou herní roli.</li>
+          <li>Upravit nebo smazat existující role.</li>
         </ul>
       </div>
 
