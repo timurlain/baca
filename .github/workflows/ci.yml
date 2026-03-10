@@ -203,7 +203,7 @@ jobs:
             echo "ANTHROPICAPI secret not configured, skipping"
           fi
         env:
-          ANTHROPIC_KEY: ${{ secrets.ANTHROPICAPI }}
+          ANTHROPIC_KEY: ${{ secrets.ANTHROPHICAPI }}
 
       - name: Deploy backend
         uses: azure/container-apps-deploy-action@v2
