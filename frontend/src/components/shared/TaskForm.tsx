@@ -32,10 +32,10 @@ interface TaskFormProps {
 }
 
 function confidenceClass(confidence: number | null | undefined): string {
-  if (confidence === null || confidence === undefined || confidence === 0) return 'border-gray-300';
+  if (confidence === null || confidence === undefined) return 'border-gray-300';
   if (confidence < 0.5) return 'border-red-400 bg-red-50';
   if (confidence < 0.8) return 'border-amber-300 bg-amber-50';
-  return 'border-gray-300';
+  return 'border-green-400 bg-green-50';
 }
 
 function WarningIcon() {
