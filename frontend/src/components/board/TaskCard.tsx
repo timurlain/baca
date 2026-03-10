@@ -53,10 +53,11 @@ export default function TaskCard({ task, onSelect, onAssignMe, isDraggable = tru
       <div className="flex items-center justify-between mt-3">
         <div className="flex -space-x-1 items-center">
           {task.assigneeId ? (
-            <Avatar 
-              name={task.assigneeName} 
-              color={task.assigneeAvatarColor} 
-              size="xs" 
+            <Avatar
+              name={task.assigneeName}
+              shortcut={task.assigneeShortcut}
+              color={task.assigneeAvatarColor}
+              size="xs"
             />
           ) : !isGuest && (
             <button

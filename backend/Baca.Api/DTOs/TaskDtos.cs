@@ -14,6 +14,8 @@ public class TaskDto
     public string? CategoryColor { get; set; }
     public int? AssigneeId { get; set; }
     public string? AssigneeName { get; set; }
+    public string? AssigneeShortcut { get; set; }
+
     public string? AssigneeAvatarColor { get; set; }
     public int? ParentTaskId { get; set; }
     public DateTime? DueDate { get; set; }
@@ -39,6 +41,8 @@ public class TaskDetailDto
     public string? CategoryColor { get; set; }
     public int? AssigneeId { get; set; }
     public string? AssigneeName { get; set; }
+    public string? AssigneeShortcut { get; set; }
+
     public string? AssigneeAvatarColor { get; set; }
     public int? ParentTaskId { get; set; }
     public string? ParentTaskTitle { get; set; }

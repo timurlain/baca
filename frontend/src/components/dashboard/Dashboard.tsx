@@ -40,7 +40,7 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-400">Načítání dashboardu...</div>;
+    return <div className="p-8 text-center text-gray-400">Načítání přehledu...</div>;
   }
 
   if (error || !data) {
@@ -49,7 +49,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-6">
-      <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+      <h1 className="text-xl font-bold text-gray-900">Přehled</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatsCard label="Celkem úkolů" value={data.totalTasks} />

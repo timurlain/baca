@@ -20,6 +20,9 @@ public class User
 
     public int? GameRoleId { get; set; }
 
+    [MaxLength(2)]
+    public string? Shortcut { get; set; }
+
     [MaxLength(7)]
     public string AvatarColor { get; set; } = "#3B82F6";
 

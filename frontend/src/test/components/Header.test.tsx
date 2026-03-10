@@ -36,7 +36,7 @@ describe('Header', () => {
         <Header />
       </BrowserRouter>
     );
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Přehled')).toBeInTheDocument();
     expect(screen.getByText('Board')).toBeInTheDocument();
   });
 

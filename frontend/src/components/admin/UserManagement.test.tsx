@@ -12,12 +12,12 @@ const mockUsers: User[] = [
   {
     id: 1, name: 'Tomáš', email: 'tomas@baca.local', phone: null,
     role: UserRole.Admin, gameRoleId: 1, gameRoleName: 'Osud',
-    avatarColor: '#10B981', isActive: true, createdAt: '2026-01-01T00:00:00Z',
+    avatarColor: '#10B981', isActive: true, createdAt: '2026-01-01T00:00:00Z', shortcut: 'TO',
   },
   {
     id: 2, name: 'Jana', email: 'jana@baca.local', phone: '+420123456789',
     role: UserRole.User, gameRoleId: null, gameRoleName: null,
-    avatarColor: '#3B82F6', isActive: true, createdAt: '2026-01-02T00:00:00Z',
+    avatarColor: '#3B82F6', isActive: true, createdAt: '2026-01-02T00:00:00Z', shortcut: null,
   },
 ];
 
@@ -51,7 +51,7 @@ describe('UserManagement', () => {
         HttpResponse.json({
           id: 3, name: 'Petr', email: 'petr@test.cz', phone: null,
           role: UserRole.User, gameRoleId: null, gameRoleName: null,
-          avatarColor: '#EF4444', isActive: true, createdAt: '2026-03-01T00:00:00Z',
+          avatarColor: '#EF4444', isActive: true, createdAt: '2026-03-01T00:00:00Z', shortcut: null,
         }, { status: 201 }),
       ),
     );
@@ -98,7 +98,7 @@ describe('UserManagement', () => {
     renderInRouter(<UserManagement />);
     await screen.findByText('Tomáš');
 
-    const resendButtons = screen.getAllByText('Odeslat odkaz');
+    const resendButtons = screen.getAllByText('Odkaz');
     await user.click(resendButtons[0]);
 
     await waitFor(() => {

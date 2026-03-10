@@ -54,6 +54,7 @@ public static class UserEndpoints
                 Role = user.Role,
                 GameRoleId = user.GameRoleId,
                 GameRoleName = user.GameRole != null ? user.GameRole.Name : null,
+                Shortcut = user.Shortcut,
                 AvatarColor = user.AvatarColor,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt
@@ -98,6 +99,7 @@ public static class UserEndpoints
             Phone = NormalizePhone(request.Phone),
             Role = request.Role,
             GameRoleId = request.GameRoleId,
+            Shortcut = request.Shortcut?.Trim(),
             AvatarColor = GenerateAvatarColor(email)
         };
 
@@ -185,6 +187,11 @@ public static class UserEndpoints
         }
 
         user.GameRoleId = request.GameRoleId;
+
+        if (request.Shortcut is not null)
+        {
+            user.Shortcut = string.IsNullOrWhiteSpace(request.Shortcut) ? null : request.Shortcut.Trim();
+        }
 
         if (request.IsActive.HasValue)
         {
@@ -379,9 +386,11 @@ public static class UserEndpoints
             Role = user.Role,
             GameRoleId = user.GameRoleId,
             GameRoleName = user.GameRole?.Name,
+            Shortcut = user.Shortcut,
             AvatarColor = user.AvatarColor,
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt
         };
     }
+
 }
