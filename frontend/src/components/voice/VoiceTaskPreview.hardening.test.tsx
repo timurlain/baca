@@ -73,14 +73,14 @@ describe('VoiceTaskPreview confidence combinations', () => {
   it('mixed confidence — correct borders per field', () => {
     const mixed: VoiceParseResponse = {
       ...baseParsed,
-      assigneeConfidence: 0.95, // high -> gray
+      assigneeConfidence: 0.95, // high -> green
       categoryConfidence: 0.6,  // medium -> amber
       priorityConfidence: 0.3,  // low -> red
       dueDateConfidence: 0.7,   // medium -> amber
     };
     renderPreview(mixed);
     const assigneeSelect = screen.getByLabelText(/Přiřazeno/);
-    expect(assigneeSelect.className).toContain('border-gray-300');
+    expect(assigneeSelect.className).toContain('border-green-400');
     const categorySelect = screen.getByLabelText(/Kategorie/);
     expect(categorySelect.className).toContain('border-amber-300');
     const prioritySelect = screen.getByLabelText(/Priorita/);
