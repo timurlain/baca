@@ -38,6 +38,7 @@ const mockTaskDetail: TaskDetail = {
   updatedAt: '2026-03-01T00:00:00Z',
   subtasks: [],
   comments: [],
+  tags: [],
 };
 
 const mockUsers: User[] = [
@@ -66,6 +67,7 @@ describe('TaskDetailModal', () => {
       http.get('/api/tasks/:id', () => HttpResponse.json(mockTaskDetail)),
       http.get('/api/users', () => HttpResponse.json(mockUsers)),
       http.get('/api/categories', () => HttpResponse.json(mockCategories)),
+      http.get('/api/tags', () => HttpResponse.json([])),
     );
   });
 

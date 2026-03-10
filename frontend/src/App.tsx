@@ -27,6 +27,7 @@ import VoiceFab from '@/components/voice/VoiceFab';
 // Admin (Agent D)
 import UserManagement from '@/components/admin/UserManagement';
 import CategoryManagement from '@/components/admin/CategoryManagement';
+import TagManagement from '@/components/admin/TagManagement';
 import GameRoleManagement from '@/components/admin/GameRoleManagement';
 import Settings from '@/components/admin/Settings';
 
@@ -120,6 +121,7 @@ function AuthenticatedApp() {
         {/* Admin (Agent D) */}
         <Route path="/admin/users" element={<AuthGuard><UserManagement /></AuthGuard>} />
         <Route path="/admin/categories" element={<AuthGuard><CategoryManagement /></AuthGuard>} />
+        <Route path="/admin/tags" element={<AuthGuard><TagManagement /></AuthGuard>} />
         <Route path="/admin/gameroles" element={<AuthGuard><GameRoleManagement /></AuthGuard>} />
         <Route path="/admin/settings" element={<AuthGuard><Settings /></AuthGuard>} />
 

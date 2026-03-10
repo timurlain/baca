@@ -30,6 +30,7 @@ public static class TaskEndpoints
         int? assignee,
         string? search,
         int? parentId,
+        int? tag,
         CancellationToken ct)
     {
         if (!RequireAuth(context))
@@ -40,6 +41,7 @@ public static class TaskEndpoints
             .Include(t => t.Category)
             .Include(t => t.Assignee)
             .Include(t => t.CreatedBy)
+            .Include(t => t.Tags)
             .AsQueryable();
 
         if (status is not null)
@@ -53,6 +55,9 @@ public static class TaskEndpoints
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(t => EF.Functions.ILike(t.Title, $"%{search}%"));
+
+        if (tag is not null)
+            query = query.Where(t => t.Tags.Any(tg => tg.Id == tag));
 
         if (parentId is not null)
             query = query.Where(t => t.ParentTaskId == parentId);
@@ -86,6 +91,7 @@ public static class TaskEndpoints
             .Include(t => t.Subtasks).ThenInclude(s => s.Assignee)
             .Include(t => t.Subtasks).ThenInclude(s => s.CreatedBy)
             .Include(t => t.Comments).ThenInclude(c => c.Author)
+            .Include(t => t.Tags)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
         if (task is null)
@@ -123,6 +129,13 @@ public static class TaskEndpoints
                 AuthorAvatarColor = c.Author.AvatarColor,
                 Text = c.Text,
                 CreatedAt = c.CreatedAt
+            }).ToList(),
+            Tags = task.Tags.OrderBy(tg => tg.Name).Select(tg => new TagDto
+            {
+                Id = tg.Id,
+                Name = tg.Name,
+                Color = tg.Color,
+                CreatedAt = tg.CreatedAt
             }).ToList()
         };
 
@@ -160,6 +173,12 @@ public static class TaskEndpoints
             UpdatedAt = DateTime.UtcNow
         };
 
+        if (request.TagIds is { Count: > 0 })
+        {
+            var tags = await db.Tags.Where(tg => request.TagIds.Contains(tg.Id)).ToListAsync(ct);
+            task.Tags = tags;
+        }
+
         db.TaskItems.Add(task);
         await db.SaveChangesAsync(ct);
 
@@ -170,6 +189,7 @@ public static class TaskEndpoints
             .Include(t => t.CreatedBy)
             .Include(t => t.Subtasks)
             .Include(t => t.Comments)
+            .Include(t => t.Tags)
             .FirstAsync(t => t.Id == task.Id, ct);
 
         return Results.Created($"/api/tasks/{task.Id}", ToDto(created));
@@ -185,7 +205,7 @@ public static class TaskEndpoints
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
             return Results.StatusCode(StatusCodes.Status403Forbidden);
 
-        var task = await db.TaskItems.FindAsync([id], ct);
+        var task = await db.TaskItems.Include(t => t.Tags).FirstOrDefaultAsync(t => t.Id == id, ct);
         if (task is null)
             return Results.NotFound();
 
@@ -197,6 +217,11 @@ public static class TaskEndpoints
         if (request.AssigneeId is not null) task.AssigneeId = request.AssigneeId;
         if (request.ParentTaskId is not null) task.ParentTaskId = request.ParentTaskId;
         if (request.DueDate is not null) task.DueDate = request.DueDate;
+        if (request.TagIds is not null)
+        {
+            var tags = await db.Tags.Where(tg => request.TagIds.Contains(tg.Id)).ToListAsync(ct);
+            task.Tags = tags;
+        }
 
         task.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
@@ -208,6 +233,7 @@ public static class TaskEndpoints
             .Include(t => t.CreatedBy)
             .Include(t => t.Subtasks)
             .Include(t => t.Comments)
+            .Include(t => t.Tags)
             .FirstAsync(t => t.Id == task.Id, ct);
 
         return Results.Ok(ToDto(updated));
@@ -390,7 +416,14 @@ public static class TaskEndpoints
         UpdatedAt = t.UpdatedAt,
         SubTaskCount = t.Subtasks.Count,
         SubTaskDoneCount = t.Subtasks.Count(s => s.Status == TaskItemStatus.Done),
-        CommentCount = t.Comments.Count
+        CommentCount = t.Comments.Count,
+        Tags = t.Tags.OrderBy(tg => tg.Name).Select(tg => new TagDto
+        {
+            Id = tg.Id,
+            Name = tg.Name,
+            Color = tg.Color,
+            CreatedAt = tg.CreatedAt
+        }).ToList()
     };
 
     private static bool RequireAuth(HttpContext context)

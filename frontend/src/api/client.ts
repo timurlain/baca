@@ -10,6 +10,9 @@ import type {
   Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
+  Tag,
+  CreateTagRequest,
+  UpdateTagRequest,
   GameRole,
   CreateGameRoleRequest,
   UpdateGameRoleRequest,
@@ -131,6 +134,7 @@ export const tasks = {
     assignee?: number;
     search?: string;
     parentId?: number;
+    tag?: number;
   }) => {
     const query = new URLSearchParams();
     if (params?.status) query.set('status', params.status);
@@ -138,6 +142,7 @@ export const tasks = {
     if (params?.assignee) query.set('assignee', String(params.assignee));
     if (params?.search) query.set('search', params.search);
     if (params?.parentId) query.set('parentId', String(params.parentId));
+    if (params?.tag) query.set('tag', String(params.tag));
     const qs = query.toString();
     return get<TaskItem[]>(`/api/tasks${qs ? `?${qs}` : ''}`);
   },
@@ -181,6 +186,18 @@ export const categories = {
     put<Category>(`/api/categories/${id}`, data),
   delete: (id: number) =>
     del(`/api/categories/${id}`),
+};
+
+// Tags
+export const tags = {
+  list: () =>
+    get<Tag[]>('/api/tags'),
+  create: (data: CreateTagRequest) =>
+    post<Tag>('/api/tags', data),
+  update: (id: number, data: UpdateTagRequest) =>
+    put<Tag>(`/api/tags/${id}`, data),
+  delete: (id: number) =>
+    del(`/api/tags/${id}`),
 };
 
 // Game Roles

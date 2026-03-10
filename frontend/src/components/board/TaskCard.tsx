@@ -50,6 +50,16 @@ export default function TaskCard({ task, onSelect, onAssignMe, isDraggable = tru
         {task.title}
       </h3>
 
+      {task.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {task.tags.map(tag => (
+            <span key={tag.id} className="text-[10px] font-medium px-1.5 py-0 rounded-full text-white" style={{ backgroundColor: tag.color }}>
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center justify-between mt-3">
         <div className="flex -space-x-1 items-center">
           {task.assigneeId ? (

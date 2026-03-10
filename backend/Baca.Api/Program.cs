@@ -63,6 +63,7 @@ app.MapDashboardEndpoints();
 app.MapFocusEndpoints();
 app.MapVoiceEndpoints();
 app.MapSettingsEndpoints();
+app.MapTagEndpoints();
 
 // Test-only endpoint for E2E authentication (never available in Production)
 if (!app.Environment.IsProduction())

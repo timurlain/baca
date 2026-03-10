@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { TaskDetail, TaskStatus, Priority, User, Category, TaskItem } from '@/types';
+import type { TaskDetail, TaskStatus, Priority, User, Category, Tag, TaskItem, UpdateTaskRequest } from '@/types';
 import { UserRole } from '@/types';
-import { tasks as tasksApi, categories as categoriesApi, users as usersApi } from '@/api/client';
+import { tasks as tasksApi, categories as categoriesApi, users as usersApi, tags as tagsApi } from '@/api/client';
 import { useAuth } from '@/hooks/useAuth';
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS } from '@/utils/constants';
 import { cn } from '@/utils/helpers';
@@ -21,6 +21,8 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   const [loading, setLoading] = useState(true);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [newTagName, setNewTagName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [addingSubtask, setAddingSubtask] = useState(false);
@@ -30,14 +32,16 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [detail, usersData, categoriesData] = await Promise.all([
+      const [detail, usersData, categoriesData, tagsData] = await Promise.all([
         tasksApi.get(taskId),
         usersApi.list(),
         categoriesApi.list(),
+        tagsApi.list(),
       ]);
       setTask(detail);
       setAllUsers(usersData);
       setAllCategories(categoriesData);
+      setAllTags(tagsData);
     } catch (err) {
       console.error('Failed to fetch task detail:', err);
     } finally {
@@ -51,7 +55,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
     }
   }, [isOpen, taskId, fetchData]);
 
-  const handleUpdate = async (patch: Partial<TaskDetail>) => {
+  const handleUpdate = async (patch: UpdateTaskRequest) => {
     if (isGuest) return;
     try {
       await tasksApi.update(taskId, patch);
@@ -314,6 +318,66 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                     value={task.dueDate ? task.dueDate.split('T')[0] : ''}
                     onChange={(e) => handleUpdate({ dueDate: e.target.value || null })}
                   />
+                </div>
+
+                <div>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Značky</h4>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {task.tags.map((tag) => (
+                      <span key={tag.id} className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: tag.color }}>
+                        {tag.name}
+                        {!isGuest && (
+                          <button
+                            onClick={() => handleUpdate({ tagIds: task.tags.filter(t => t.id !== tag.id).map(t => t.id) })}
+                            className="hover:text-gray-200 ml-0.5"
+                          >
+                            &times;
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                    {task.tags.length === 0 && <span className="text-xs text-gray-400 italic">Bez značek</span>}
+                  </div>
+                  {!isGuest && (() => {
+                    const available = allTags.filter(t => !task.tags.some(tt => tt.id === t.id));
+                    return available.length > 0 ? (
+                      <select
+                        className="w-full text-xs font-medium py-1.5 px-2 rounded border border-gray-200 bg-white"
+                        value=""
+                        onChange={(e) => {
+                          const tagId = Number(e.target.value);
+                          if (tagId) handleUpdate({ tagIds: [...task.tags.map(t => t.id), tagId] });
+                        }}
+                      >
+                        <option value="">+ Přidat značku</option>
+                        {available.map(t => (
+                          <option key={t.id} value={t.id}>{t.name}</option>
+                        ))}
+                      </select>
+                    ) : null;
+                  })()}
+                  {!isGuest && (
+                    <form className="mt-1 flex gap-1" onSubmit={async (e) => {
+                      e.preventDefault();
+                      const name = newTagName.trim();
+                      if (!name) return;
+                      try {
+                        const created = await tagsApi.create({ name, color: '#3B82F6' });
+                        setAllTags(prev => [...prev, created]);
+                        await handleUpdate({ tagIds: [...task.tags.map(t => t.id), created.id] });
+                        setNewTagName('');
+                      } catch { /* duplicate or error — ignore */ }
+                    }}>
+                      <input
+                        type="text"
+                        value={newTagName}
+                        onChange={(e) => setNewTagName(e.target.value)}
+                        placeholder="Nová značka..."
+                        className="flex-1 text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button type="submit" disabled={!newTagName.trim()} className="text-xs bg-blue-600 text-white rounded px-2 py-1 hover:bg-blue-700 disabled:opacity-50">+</button>
+                    </form>
+                  )}
                 </div>
 
                 {!isGuest && (
