@@ -30,6 +30,7 @@ import CategoryManagement from '@/components/admin/CategoryManagement';
 import TagManagement from '@/components/admin/TagManagement';
 import GameRoleManagement from '@/components/admin/GameRoleManagement';
 import Settings from '@/components/admin/Settings';
+import TrashManagement from '@/components/admin/TrashManagement';
 
 // Task creation & list
 import CreateTaskPage from '@/components/tasks/CreateTaskPage';
@@ -126,6 +127,7 @@ function AuthenticatedApp() {
         <Route path="/admin/tags" element={<AuthGuard><TagManagement /></AuthGuard>} />
         <Route path="/admin/gameroles" element={<AuthGuard><GameRoleManagement /></AuthGuard>} />
         <Route path="/admin/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+        <Route path="/admin/trash" element={<AuthGuard><TrashManagement /></AuthGuard>} />
 
         {/* Guide (Phase 2b) */}
         <Route path="/guide" element={<AuthGuard><GuidePage /></AuthGuard>}>

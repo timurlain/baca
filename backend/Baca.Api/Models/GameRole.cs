@@ -20,6 +20,9 @@ public class GameRole
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+
     // Navigation properties
     public ICollection<User> Users { get; set; } = [];
 }

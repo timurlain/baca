@@ -22,6 +22,13 @@ public class BacaDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Global soft-delete query filters
+        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<TaskItem>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Category>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Tag>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<GameRole>().HasQueryFilter(e => !e.IsDeleted);
+
         // User
         modelBuilder.Entity<User>(entity =>
         {

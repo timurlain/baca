@@ -165,7 +165,8 @@ public static class CategoryEndpoints
             return Results.Conflict("Kategorii nelze smazat, protože obsahuje úkoly.");
         }
 
-        dbContext.Categories.Remove(category);
+        category.IsDeleted = true;
+        category.DeletedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(ct);
         return Results.Ok();
     }

@@ -257,6 +257,23 @@ export const settings = {
     put<AppSettings>('/api/settings', data),
 };
 
+// Trash (Admin)
+export interface DeletedItem {
+  entity: string;
+  id: number;
+  name: string;
+  deletedAt: string;
+}
+
+export const trash = {
+  list: () =>
+    get<DeletedItem[]>('/api/admin/trash'),
+  restore: (entity: string, id: number) =>
+    post<void>(`/api/admin/trash/${entity}/${id}/restore`),
+  permanentDelete: (entity: string, id: number) =>
+    del(`/api/admin/trash/${entity}/${id}`),
+};
+
 // Health
 export const health = {
   check: () =>

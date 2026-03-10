@@ -316,7 +316,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                     type="date"
                     className="w-full text-xs font-medium py-1.5 px-2 rounded border border-gray-200 bg-white"
                     value={task.dueDate ? task.dueDate.split('T')[0] : ''}
-                    onChange={(e) => handleUpdate({ dueDate: e.target.value || null })}
+                    onChange={(e) => handleUpdate({ dueDate: e.target.value ? `${e.target.value}T00:00:00` : null })}
                   />
                 </div>
 

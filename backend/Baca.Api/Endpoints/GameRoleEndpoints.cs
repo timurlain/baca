@@ -172,7 +172,8 @@ public static class GameRoleEndpoints
             return Results.Conflict("Herní roli nelze smazat, protože má přiřazené uživatele.");
         }
 
-        dbContext.GameRoles.Remove(gameRole);
+        gameRole.IsDeleted = true;
+        gameRole.DeletedAt = DateTime.UtcNow;
         await dbContext.SaveChangesAsync(ct);
         return Results.Ok();
     }

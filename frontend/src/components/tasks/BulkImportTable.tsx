@@ -99,7 +99,7 @@ export default function BulkImportTable({
           categoryId: row.categoryId,
           priority: row.priority,
           status: row.status,
-          dueDate: row.dueDate || null,
+          dueDate: row.dueDate ? `${row.dueDate}T00:00:00` : null,
         });
         updateRow(row.key, { saved: true, error: null });
         savedCount++;

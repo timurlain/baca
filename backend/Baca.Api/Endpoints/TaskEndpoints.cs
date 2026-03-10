@@ -373,12 +373,22 @@ public static class TaskEndpoints
         if (!RequireRole(context, UserRole.User, UserRole.Admin))
             return Results.StatusCode(StatusCodes.Status403Forbidden);
 
-        var deleted = await db.TaskItems
-            .Where(t => t.Id == id)
-            .ExecuteDeleteAsync(ct);
-
-        if (deleted == 0)
+        var task = await db.TaskItems.FindAsync([id], ct);
+        if (task is null)
             return Results.NotFound();
+
+        task.IsDeleted = true;
+        task.DeletedAt = DateTime.UtcNow;
+
+        // Soft-delete subtasks too
+        var subtasks = await db.TaskItems.Where(t => t.ParentTaskId == id).ToListAsync(ct);
+        foreach (var sub in subtasks)
+        {
+            sub.IsDeleted = true;
+            sub.DeletedAt = DateTime.UtcNow;
+        }
+
+        await db.SaveChangesAsync(ct);
 
         return Results.NoContent();
     }

@@ -87,7 +87,7 @@ export default function KanbanBoard({ forceAssigneeId }: KanbanBoardProps) {
   return (
     <div className="h-full flex flex-col">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Kanban Board</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{"\u00dakol\u006fv\u00e1 tabule"}</h1>
         {!isGuest && (
           <button
             onClick={() => navigate('/tasks/new')}
