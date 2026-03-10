@@ -233,6 +233,14 @@ public static class TaskEndpoints
             return Results.NotFound();
 
         var oldStatus = task.Status;
+        var currentUserId = GetUserId(context);
+
+        // Auto-assign when moving to non-Idea status without assignee
+        if (request.Status != TaskItemStatus.Idea && task.AssigneeId is null)
+        {
+            task.AssigneeId = currentUserId;
+        }
+
         task.Status = request.Status;
         task.UpdatedAt = DateTime.UtcNow;
 
@@ -250,9 +258,14 @@ public static class TaskEndpoints
 
         await db.SaveChangesAsync(ct);
 
+        // Reload assignee if it was auto-assigned
+        if (task.Assignee is null && task.AssigneeId is not null)
+        {
+            await db.Entry(task).Reference(t => t.Assignee).LoadAsync(ct);
+        }
+
         if (task.Assignee is not null && oldStatus != request.Status)
         {
-            var currentUserId = GetUserId(context);
             if (task.AssigneeId != currentUserId)
             {
                 var assignedBy = await db.Users.FindAsync([currentUserId], ct);
