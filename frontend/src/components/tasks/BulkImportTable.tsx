@@ -99,12 +99,12 @@ export default function BulkImportTable({
           categoryId: row.categoryId,
           priority: row.priority,
           status: row.status,
-          dueDate: row.dueDate ? `${row.dueDate}T00:00:00` : null,
+          dueDate: row.dueDate ? `${row.dueDate}T00:00:00Z` : null,
         });
         updateRow(row.key, { saved: true, error: null });
         savedCount++;
-      } catch {
-        updateRow(row.key, { error: 'Nepodařilo se uložit' });
+      } catch (err) {
+        updateRow(row.key, { error: err instanceof Error ? err.message : 'Nepodařilo se uložit' });
       }
     }
 
