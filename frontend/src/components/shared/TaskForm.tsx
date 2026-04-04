@@ -87,7 +87,7 @@ export default function TaskForm({
         assigneeId: assigneeId ?? undefined,
         categoryId: categoryId ?? undefined,
         priority,
-        dueDate: dueDate ? `${dueDate}T00:00:00` : undefined,
+        dueDate: dueDate ? `${dueDate}T00:00:00Z` : undefined,
         status,
       };
       await onSubmit(req);
@@ -95,8 +95,8 @@ export default function TaskForm({
       setTitle('');
       setDescription('');
       setDueDate('');
-    } catch {
-      setError('Nepodařilo se vytvořit úkol');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nepodařilo se vytvořit úkol');
     } finally {
       setSaving(false);
     }

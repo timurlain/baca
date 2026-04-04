@@ -166,6 +166,6 @@ describe('VoiceTaskPreview confidence combinations', () => {
     renderPreview();
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Uložit úkol' }));
-    expect(await screen.findByText('Nepodařilo se vytvořit úkol')).toBeInTheDocument();
+    expect(await screen.findByText('Server error')).toBeInTheDocument();
   });
 });
