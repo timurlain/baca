@@ -1,5 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 
+function formatDateAsISO(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 async function loginAsAdmin(page: Page) {
   await page.goto('/login');
   await page.waitForLoadState('domcontentloaded');
@@ -123,6 +130,53 @@ test.describe('Task Creation Page', () => {
 
     // Should not show success
     await expect(page.getByText('Úkol vytvořen')).not.toBeVisible({ timeout: 2000 });
+  });
+
+  test('creating a task with today as the deadline succeeds', async ({ page }) => {
+    const todayStr = formatDateAsISO(new Date());
+
+    await page.goto('/tasks/new');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByLabel('Název').fill(`E2E Deadline Today ${Date.now()}`);
+    await page.getByLabel('Termín').fill(todayStr);
+    await page.getByRole('button', { name: 'Vytvořit úkol' }).click();
+
+    await expect(page.getByText('Úkol vytvořen')).toBeVisible({ timeout: 10000 });
+  });
+
+  test('creating a task with tomorrow as the deadline succeeds', async ({ page }) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = formatDateAsISO(tomorrow);
+
+    await page.goto('/tasks/new');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByLabel('Název').fill(`E2E Deadline Tomorrow ${Date.now()}`);
+    await page.getByLabel('Termín').fill(tomorrowStr);
+    await page.getByRole('button', { name: 'Vytvořit úkol' }).click();
+
+    await expect(page.getByText('Úkol vytvořen')).toBeVisible({ timeout: 10000 });
+  });
+
+  test('created task with deadline appears on the board with correct due date', async ({ page }) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = formatDateAsISO(tomorrow);
+    const taskTitle = `E2E Deadline Board ${Date.now()}`;
+
+    await page.goto('/tasks/new');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByLabel('Název').fill(taskTitle);
+    await page.getByLabel('Termín').fill(tomorrowStr);
+    await page.getByRole('button', { name: 'Vytvořit úkol' }).click();
+    await expect(page.getByText('Úkol vytvořen')).toBeVisible({ timeout: 10000 });
+
+    await page.goto('/board');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 10000 });
   });
 
   test('bulk import tab shows textarea', async ({ page }) => {
