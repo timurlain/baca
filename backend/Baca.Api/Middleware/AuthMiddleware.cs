@@ -80,6 +80,17 @@ public class AuthMiddleware
         context.Items["UserId"] = user.Id;
         context.Items["Role"] = user.Role;
 
+        // Sliding expiration: refresh session cookie on every authenticated request
+        var freshCookie = await authService.GenerateSessionCookieAsync(user.Id, ct);
+        context.Response.Cookies.Append(CookieName, freshCookie, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = context.Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            MaxAge = TimeSpan.FromDays(365),
+            Path = "/"
+        });
+
         await _next(context);
     }
 
