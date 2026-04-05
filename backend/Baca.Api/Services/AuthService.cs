@@ -94,7 +94,7 @@ public class AuthService : IAuthService
     {
         var secret = _config["Auth:Secret"]
             ?? throw new InvalidOperationException("Auth:Secret not configured");
-        var expires = DateTimeOffset.UtcNow.AddDays(30).ToUnixTimeSeconds();
+        var expires = DateTimeOffset.UtcNow.AddDays(365).ToUnixTimeSeconds();
         var payload = $"{userId}:{expires}";
 
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
