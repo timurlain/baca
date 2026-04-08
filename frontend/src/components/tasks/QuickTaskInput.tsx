@@ -27,7 +27,7 @@ export default function QuickTaskInput({ onTaskCreated }: QuickTaskInputProps) {
   const processingRef = useRef(false);
   const titleBeforeRecordingRef = useRef<string | null>(null);
   const wasInConfirmRef = useRef(false);
-  const { defaults, saveDefaults } = useQuickTaskDefaults();
+  const { defaults } = useQuickTaskDefaults();
   const recorder = useVoiceRecorder();
 
   // Use a ref for title so the processAudio closure always sees the latest value
@@ -48,7 +48,6 @@ export default function QuickTaskInput({ onTaskCreated }: QuickTaskInputProps) {
         categoryId: defaults.categoryId,
         assigneeId: null,
       });
-      saveDefaults(defaults);
       setTitle('');
       setVoicePhase('idle');
       onTaskCreated();
@@ -59,7 +58,7 @@ export default function QuickTaskInput({ onTaskCreated }: QuickTaskInputProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [defaults, saveDefaults, onTaskCreated]);
+  }, [defaults, onTaskCreated]);
 
   const handleSubmit = useCallback(async () => {
     if (submitting) return;
@@ -169,7 +168,7 @@ export default function QuickTaskInput({ onTaskCreated }: QuickTaskInputProps) {
           type="button"
           onClick={() => void handleMicClick()}
           disabled={submitting || voicePhase === 'transcribing'}
-          aria-label={voicePhase === 'recording' ? 'Zastavit nahrávání' : 'Nahrát hlasem'}
+          aria-label={voicePhase === 'recording' ? 'Zastavit nahrávání' : voicePhase === 'transcribing' ? 'Přepisuji…' : 'Nahrát hlasem'}
           className={`flex items-center justify-center w-11 h-11 rounded-lg transition-colors ${
             voicePhase === 'recording'
               ? 'bg-red-600 text-white animate-pulse hover:bg-red-700'
@@ -189,7 +188,7 @@ export default function QuickTaskInput({ onTaskCreated }: QuickTaskInputProps) {
         <button
           type="button"
           onClick={() => void handleSubmit()}
-          disabled={submitting || !title.trim()}
+          disabled={submitting || voicePhase === 'transcribing' || !title.trim()}
           aria-label="Přidat úkol"
           className="flex items-center justify-center w-11 h-11 rounded-lg bg-forest-800 text-white hover:bg-forest-700 disabled:opacity-50 transition-colors"
         >
