@@ -5,6 +5,7 @@ import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '
 import { formatDate, isOverdue, cn } from '@/utils/helpers';
 import Avatar from '@/components/shared/Avatar';
 import TaskDetailModal from '@/components/board/TaskDetailModal';
+import QuickTaskInput from '@/components/tasks/QuickTaskInput';
 
 interface Filters {
   status: string;
@@ -97,6 +98,8 @@ export default function TaskListPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-4">{"\u00dakoly"}</h1>
+
+      <QuickTaskInput onTaskCreated={() => fetchTasks(search)} />
 
       {/* Search */}
       <div className="mb-4">
