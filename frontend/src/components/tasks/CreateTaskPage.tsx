@@ -5,6 +5,7 @@ import { TaskStatus } from '@/types';
 import type { CreateTaskRequest, VoiceParseResponse } from '@/types';
 import TaskForm from '@/components/shared/TaskForm';
 import BulkImportTable from './BulkImportTable';
+import { useQuickTaskDefaults } from '@/hooks/useQuickTaskDefaults';
 
 type Tab = 'single' | 'bulk';
 
@@ -34,10 +35,17 @@ export default function CreateTaskPage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  const { saveDefaults } = useQuickTaskDefaults();
+
   const handleSubmit = useCallback(async (req: CreateTaskRequest) => {
     await tasks.create(req);
+    saveDefaults({
+      status: req.status ?? 'Open',
+      priority: req.priority ?? 'Medium',
+      categoryId: req.categoryId ?? null,
+    });
     setToast(true);
-  }, []);
+  }, [saveDefaults]);
 
   const handleParseBulk = async () => {
     if (!bulkText.trim()) return;
