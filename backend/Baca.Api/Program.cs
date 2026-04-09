@@ -43,6 +43,8 @@ builder.Services.AddHttpClient<IVoiceParsingService, VoiceParsingService>();
 builder.Services.AddSingleton<ITwilioWhatsAppClient, TwilioWhatsAppClient>();
 builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
 
+builder.Services.AddHttpClient("OidcTokenRefresh");
+
 // Authentication — OIDC via registrace-ovcina
 builder.Services.AddAuthentication(options =>
 {
@@ -101,10 +103,20 @@ builder.Services.AddAuthentication(options =>
         if (sub is null) return;
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.RegistraceUserId == sub);
+        if (user is not null && (user.IsDeleted || !user.IsActive))
+        {
+            context.Fail("User account is deactivated");
+            return;
+        }
+
         if (user is null)
         {
-            // Check if there's an existing user with same email (migration path)
-            user = await db.Users.FirstOrDefaultAsync(u => u.Email == email && u.RegistraceUserId == null);
+            // Only try email migration if we have a real email
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                user = await db.Users.FirstOrDefaultAsync(u => u.Email == email && u.RegistraceUserId == null);
+            }
+
             if (user is not null)
             {
                 user.RegistraceUserId = sub;

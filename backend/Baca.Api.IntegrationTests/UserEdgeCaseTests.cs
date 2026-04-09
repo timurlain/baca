@@ -262,50 +262,6 @@ public sealed class UserEdgeCaseTests
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    [Fact(DisplayName = "ResendLink_NotFound_Returns404")]
-    public async Task ResendLinkNotFound()
-    {
-        await using var factory = CreateFactory();
-        await factory.InitializeAsync();
-        await ResetDatabaseAsync(factory.Services);
-        await SeedAdminAsync(factory.Services);
-        using var client = CreateAdminClient(factory);
-
-        var response = await client.PostAsync("/api/users/9999/resend-link", content: null);
-
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-    }
-
-    [Fact(DisplayName = "ResendLink_UserWithNoEmail_Returns400")]
-    public async Task ResendLinkNoEmail()
-    {
-        await using var factory = CreateFactory();
-        await factory.InitializeAsync();
-        await ResetDatabaseAsync(factory.Services);
-        await SeedAdminAsync(factory.Services);
-
-        // Create user without email
-        using (var scope = factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-            db.Users.Add(new User
-            {
-                Id = 2,
-                Name = "NoEmail",
-                Email = null,
-                Role = UserRole.User,
-                AvatarColor = "#3B82F6"
-            });
-            await db.SaveChangesAsync();
-        }
-
-        using var client = CreateAdminClient(factory);
-
-        var response = await client.PostAsync("/api/users/2/resend-link", content: null);
-
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-
     [Fact(DisplayName = "GetUsers_NonAdmin_Returns403")]
     public async Task GetUsersNonAdmin()
     {

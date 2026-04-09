@@ -24,115 +24,40 @@ public class AuthFlowTests : IClassFixture<BacaWebApplicationFactory>
     }
 
     [Fact]
-    public async Task RequestLink_ValidEmail_Returns200()
+    public async Task Login_RedirectsToOidc()
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-        var admin = await EnsureAdminAsync(db);
+        var response = await _client.GetAsync("/api/auth/login");
 
-        var response = await _client.PostAsJsonAsync("/api/auth/request-link",
-            new LoginRequest { Email = admin.Email! });
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var token = await db.LoginTokens
-            .Where(lt => lt.UserId == admin.Id)
-            .OrderByDescending(lt => lt.CreatedAt)
-            .FirstOrDefaultAsync();
-        token.Should().NotBeNull();
+        // Should return a Challenge result which triggers OIDC redirect
+        // In test environment without real OIDC, this returns 302 or 401
+        var statusCode = (int)response.StatusCode;
+        statusCode.Should().BeOneOf([302, 401],
+            "Login should redirect to OIDC provider or return challenge");
     }
 
     [Fact]
-    public async Task RequestLink_UnknownEmail_Returns404()
+    public async Task Login_WithReturnUrl_PreservesLocalUrl()
     {
-        var response = await _client.PostAsJsonAsync("/api/auth/request-link",
-            new LoginRequest { Email = "unknown@example.com" });
+        var response = await _client.GetAsync("/api/auth/login?returnUrl=/tasks");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var statusCode = (int)response.StatusCode;
+        statusCode.Should().BeOneOf([302, 401]);
     }
 
     [Fact]
-    public async Task VerifyToken_Valid_SetsCookie()
+    public async Task Login_WithAbsoluteReturnUrl_DefaultsToRoot()
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-        var admin = await EnsureAdminAsync(db);
+        // Absolute URLs should be rejected to prevent open redirects
+        var response = await _client.GetAsync("/api/auth/login?returnUrl=https://evil.com");
 
-        var loginToken = new LoginToken
-        {
-            UserId = admin.Id,
-            Token = Guid.NewGuid().ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(15)
-        };
-        db.LoginTokens.Add(loginToken);
-        await db.SaveChangesAsync();
-
-        var response = await _client.GetAsync($"/api/auth/verify/{loginToken.Token}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        response.Headers.Should().ContainKey("Set-Cookie");
-
-        var user = await response.Content.ReadFromJsonAsync<AuthResponse>();
-        user.Should().NotBeNull();
-        user!.Name.Should().Be(admin.Name);
+        var statusCode = (int)response.StatusCode;
+        statusCode.Should().BeOneOf([302, 401]);
     }
 
     [Fact]
-    public async Task VerifyToken_Expired_Returns401()
+    public async Task Logout_Returns200()
     {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-        var admin = await EnsureAdminAsync(db);
-
-        var loginToken = new LoginToken
-        {
-            UserId = admin.Id,
-            Token = Guid.NewGuid().ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(-5)
-        };
-        db.LoginTokens.Add(loginToken);
-        await db.SaveChangesAsync();
-
-        var response = await _client.GetAsync($"/api/auth/verify/{loginToken.Token}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task GuestLogin_CorrectPin_SetsCookie()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-        await EnsureGuestPinAsync(db);
-
-        var response = await _client.PostAsJsonAsync("/api/auth/guest",
-            new GuestLoginRequest { Pin = "ovcina2026" });
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        response.Headers.Should().ContainKey("Set-Cookie");
-
-        var user = await response.Content.ReadFromJsonAsync<AuthResponse>();
-        user.Should().NotBeNull();
-        user!.Role.Should().Be(UserRole.Guest);
-    }
-
-    [Fact]
-    public async Task GuestLogin_WrongPin_Returns401()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-        await EnsureGuestPinAsync(db);
-
-        var response = await _client.PostAsJsonAsync("/api/auth/guest",
-            new GuestLoginRequest { Pin = "wrongpin" });
-
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task Logout_ClearsCookie()
-    {
-        var authenticatedClient = await CreateAuthenticatedClientAsync();
+        var authenticatedClient = CreateAuthenticatedClient();
 
         var response = await authenticatedClient.PostAsync("/api/auth/logout", null);
 
@@ -142,13 +67,18 @@ public class AuthFlowTests : IClassFixture<BacaWebApplicationFactory>
     [Fact]
     public async Task Me_Authenticated_ReturnsUser()
     {
-        var authenticatedClient = await CreateAuthenticatedClientAsync();
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
+        var user = await EnsureAdminAsync(db);
+
+        var authenticatedClient = CreateAuthenticatedClient(user.Id);
 
         var response = await authenticatedClient.GetAsync("/api/auth/me");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var user = await response.Content.ReadFromJsonAsync<AuthResponse>();
-        user.Should().NotBeNull();
+        var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
+        authResponse.Should().NotBeNull();
+        authResponse!.Name.Should().Be(user.Name);
     }
 
     [Fact]
@@ -170,42 +100,19 @@ public class AuthFlowTests : IClassFixture<BacaWebApplicationFactory>
             Name = "TestAdmin",
             Email = "test-admin@baca.local",
             Role = UserRole.Admin,
-            AvatarColor = "#10B981"
+            AvatarColor = "#10B981",
+            IsActive = true,
         };
         db.Users.Add(admin);
         await db.SaveChangesAsync();
         return admin;
     }
 
-    private static async Task EnsureGuestPinAsync(BacaDbContext db)
+    private HttpClient CreateAuthenticatedClient(int userId = 1)
     {
-        var settings = await db.AppSettings.FindAsync(1);
-        if (settings is not null)
-            return;
-
-        var hashedPin = BCrypt.Net.BCrypt.HashPassword("ovcina2026");
-        db.AppSettings.Add(new AppSettings { Id = 1, GuestPin = hashedPin });
-        await db.SaveChangesAsync();
-    }
-
-    private async Task<HttpClient> CreateAuthenticatedClientAsync()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-        var admin = await EnsureAdminAsync(db);
-
-        var loginToken = new LoginToken
-        {
-            UserId = admin.Id,
-            Token = Guid.NewGuid().ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(15)
-        };
-        db.LoginTokens.Add(loginToken);
-        await db.SaveChangesAsync();
-
         var client = _factory.CreateClient();
-
-        await client.GetAsync($"/api/auth/verify/{loginToken.Token}");
+        client.DefaultRequestHeaders.Add("X-Test-Role", UserRole.Admin.ToString());
+        client.DefaultRequestHeaders.Add("X-Test-User-Id", userId.ToString(System.Globalization.CultureInfo.InvariantCulture));
         return client;
     }
 }

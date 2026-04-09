@@ -2,8 +2,9 @@ import { DEFAULT_APP_NAME } from '@/utils/constants';
 
 export default function LoginPage() {
   const handleLogin = () => {
-    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-    window.location.href = `/api/auth/login?returnUrl=${returnUrl}`;
+    const current = window.location.pathname;
+    const returnUrl = current === '/login' ? '/' : current + window.location.search;
+    window.location.href = `/api/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`;
   };
 
   return (

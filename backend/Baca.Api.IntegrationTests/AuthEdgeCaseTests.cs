@@ -11,48 +11,6 @@ namespace Baca.Api.IntegrationTests;
 
 public sealed class AuthEdgeCaseTests
 {
-    [Fact(DisplayName = "VerifyToken_WrongFormat_NotGuid_Returns401Not500")]
-    public async Task VerifyTokenWrongFormatNotGuid()
-    {
-        await using var factory = new BacaWebApplicationFactory();
-        await factory.InitializeAsync();
-        using var client = factory.CreateClient();
-
-        var response = await client.GetAsync("/api/auth/verify/not-a-valid-guid-token");
-
-        // Should return 401 (Unauthorized) not 500 (Internal Server Error)
-        var statusCode = (int)response.StatusCode;
-        statusCode.Should().NotBe(500, "Invalid token format should not cause server error");
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact(DisplayName = "VerifyToken_EmptyToken_Returns401Or404")]
-    public async Task VerifyTokenEmpty()
-    {
-        await using var factory = new BacaWebApplicationFactory();
-        await factory.InitializeAsync();
-        using var client = factory.CreateClient();
-
-        var response = await client.GetAsync("/api/auth/verify/");
-
-        // Empty token should not return 500
-        var statusCode = (int)response.StatusCode;
-        statusCode.Should().NotBe(500, "Empty token should not cause server error");
-    }
-
-    [Fact(DisplayName = "VerifyToken_SpecialCharacters_Returns401Not500")]
-    public async Task VerifyTokenSpecialCharacters()
-    {
-        await using var factory = new BacaWebApplicationFactory();
-        await factory.InitializeAsync();
-        using var client = factory.CreateClient();
-
-        var response = await client.GetAsync("/api/auth/verify/<script>alert(1)</script>");
-
-        var statusCode = (int)response.StatusCode;
-        statusCode.Should().NotBe(500, "XSS-like token should not cause server error");
-    }
-
     [Fact(DisplayName = "VoiceParse_EmptyTranscription_Returns400")]
     public async Task VoiceParseEmptyTranscription()
     {
@@ -98,23 +56,6 @@ public sealed class AuthEdgeCaseTests
         var response = await client.PostAsync("/api/voice/transcribe", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-
-    [Fact(DisplayName = "GuestLogin_EmptyPin_Returns401")]
-    public async Task GuestLoginEmptyPin()
-    {
-        await using var factory = new BacaWebApplicationFactory();
-        await factory.InitializeAsync();
-        using var client = factory.CreateClient();
-
-        var response = await client.PostAsJsonAsync("/api/auth/guest", new GuestLoginRequest
-        {
-            Pin = ""
-        });
-
-        // Should not crash, just return 401
-        var statusCode = (int)response.StatusCode;
-        statusCode.Should().NotBe(500);
     }
 
     private static BacaWebApplicationFactory CreateVoiceFactory()

@@ -15,10 +15,11 @@ public static class AuthEndpoints
 
         group.MapGet("/login", (HttpContext context, string? returnUrl) =>
         {
-            var properties = new AuthenticationProperties
-            {
-                RedirectUri = returnUrl ?? "/"
-            };
+            // Prevent open redirects
+            if (string.IsNullOrEmpty(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
+                returnUrl = "/";
+
+            var properties = new AuthenticationProperties { RedirectUri = returnUrl };
             return Results.Challenge(properties, [OpenIdConnectDefaults.AuthenticationScheme]);
         });
 
@@ -42,7 +43,7 @@ public static class AuthEndpoints
             var dbUser = await db.Users.AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == localUserId, ct);
 
-            if (dbUser is null)
+            if (dbUser is null || dbUser.IsDeleted || !dbUser.IsActive)
                 return Results.Unauthorized();
 
             return Results.Ok(new

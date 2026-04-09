@@ -56,7 +56,8 @@ public partial class TokenRefreshMiddleware
         var clientId = config["Oidc:ClientId"];
         var clientSecret = config["Oidc:ClientSecret"];
 
-        using var http = new HttpClient();
+        var httpFactory = context.RequestServices.GetRequiredService<IHttpClientFactory>();
+        using var http = httpFactory.CreateClient("OidcTokenRefresh");
         var response = await http.PostAsync($"{authority}/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "refresh_token",

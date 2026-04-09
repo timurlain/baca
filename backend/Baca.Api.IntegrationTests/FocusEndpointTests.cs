@@ -101,22 +101,15 @@ public class FocusEndpointTests : IntegrationTestBase
             Name = "FocusSortUser",
             Email = "focus-sort@baca.local",
             Role = UserRole.User,
-            AvatarColor = "#10B981"
+            AvatarColor = "#10B981",
+            IsActive = true,
         };
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        var loginToken = new LoginToken
-        {
-            UserId = user.Id,
-            Token = Guid.NewGuid().ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(15)
-        };
-        db.LoginTokens.Add(loginToken);
-        await db.SaveChangesAsync();
-
         var client = Factory.CreateClient();
-        await client.GetAsync($"/api/auth/verify/{loginToken.Token}");
+        client.DefaultRequestHeaders.Add("X-Test-Role", UserRole.User.ToString());
+        client.DefaultRequestHeaders.Add("X-Test-User-Id", user.Id.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         db.TaskItems.AddRange(
             new TaskItem { Title = "Low", Status = TaskItemStatus.Open, Priority = Priority.Low, AssigneeId = user.Id, CreatedById = user.Id, DueDate = DateTime.UtcNow.AddDays(1) },

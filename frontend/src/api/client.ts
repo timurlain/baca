@@ -60,8 +60,11 @@ async function request<T>(
   });
 
   if (res.status === 401) {
-    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-    window.location.href = `/api/auth/login?returnUrl=${returnUrl}`;
+    const path = window.location.pathname;
+    if (!path.startsWith('/login')) {
+      const returnUrl = encodeURIComponent(path + window.location.search);
+      window.location.href = `/api/auth/login?returnUrl=${returnUrl}`;
+    }
     throw new ApiError(401, 'Unauthorized');
   }
 
