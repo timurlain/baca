@@ -19,8 +19,6 @@ import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
-  LoginRequest,
-  GuestLoginRequest,
   AuthResponse,
   TranscriptionResult,
   VoiceParseRequest,
@@ -62,10 +60,8 @@ async function request<T>(
   });
 
   if (res.status === 401) {
-    const path = window.location.pathname;
-    if (!path.startsWith('/login') && !path.startsWith('/auth/verify')) {
-      window.location.href = '/login';
-    }
+    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/api/auth/login?returnUrl=${returnUrl}`;
     throw new ApiError(401, 'Unauthorized');
   }
 
@@ -114,12 +110,10 @@ function del<T = void>(path: string): Promise<T> {
 
 // Auth
 export const auth = {
-  requestLink: (data: LoginRequest) =>
-    post<void>('/api/auth/request-link', data),
-  verifyToken: (token: string) =>
-    get<void>(`/api/auth/verify/${token}`),
-  guestLogin: (data: GuestLoginRequest) =>
-    post<void>('/api/auth/guest', data),
+  login: () => {
+    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/api/auth/login?returnUrl=${returnUrl}`;
+  },
   logout: () =>
     post<void>('/api/auth/logout'),
   me: () =>
@@ -226,8 +220,6 @@ export const users = {
     post<User>('/api/users', data),
   update: (id: number, data: UpdateUserRequest) =>
     put<User>(`/api/users/${id}`, data),
-  resendLink: (id: number) =>
-    post<void>(`/api/users/${id}/resend-link`),
 };
 
 // Dashboard

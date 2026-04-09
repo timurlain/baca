@@ -1,5 +1,4 @@
 using Baca.Api.Data;
-using Baca.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -40,13 +39,6 @@ public class BacaWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             services.AddDbContext<BacaDbContext>(options =>
                 options.UseNpgsql(_postgres.GetConnectionString()));
 
-            // Replace EmailService with no-op for tests (unless overridden by custom config)
-            var emailDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(IEmailService));
-            if (emailDescriptor != null)
-                services.Remove(emailDescriptor);
-            services.AddScoped<IEmailService, NoOpEmailService>();
-
             // Custom service overrides run last so they can replace defaults
             _configureServices?.Invoke(services);
         });
@@ -61,10 +53,4 @@ public class BacaWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     {
         await _postgres.DisposeAsync();
     }
-}
-
-file sealed class NoOpEmailService : IEmailService
-{
-    public Task SendMagicLinkAsync(string email, string name, string token, CancellationToken ct)
-        => Task.CompletedTask;
 }

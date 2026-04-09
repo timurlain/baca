@@ -13,21 +13,15 @@ export function useAuth() {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email: string) => {
-    return auth.requestLink({ email });
-  };
-
-  const guestLogin = async (pin: string) => {
-    await auth.guestLogin({ pin });
-    const res = await auth.me();
-    setUser(res);
-    return res;
+  const login = () => {
+    auth.login();
   };
 
   const logout = async () => {
     await auth.logout();
     setUser(null);
+    window.location.href = '/login';
   };
 
-  return { user, loading, login, guestLogin, logout };
+  return { user, loading, login, logout };
 }

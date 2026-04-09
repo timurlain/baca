@@ -38,12 +38,8 @@ describe('API client', () => {
       http.get('http://localhost/api/health', () =>
         HttpResponse.json({ status: 'healthy', db: 'ok' })),
       http.get('http://localhost/api/auth/me', () =>
-        HttpResponse.json({ id: 1, name: 'Tomáš', role: 'Admin', avatarColor: '#10B981' })),
-      http.post('http://localhost/api/auth/request-link', () =>
-        new HttpResponse(null, { status: 200 })),
+        HttpResponse.json({ id: '1', name: 'Tomáš', email: 'tomas@baca.local', role: 'Admin', avatarColor: '#10B981' })),
       http.post('http://localhost/api/auth/logout', () =>
-        new HttpResponse(null, { status: 200 })),
-      http.post('http://localhost/api/auth/guest', () =>
         new HttpResponse(null, { status: 200 })),
       http.get('http://localhost/api/tasks', () =>
         HttpResponse.json([{ id: 1, title: 'Task' }])),
@@ -83,8 +79,6 @@ describe('API client', () => {
         HttpResponse.json([{ id: 1, name: 'Tomáš' }])),
       http.post('http://localhost/api/users', () =>
         HttpResponse.json({ id: 1, name: 'Tomáš' }, { status: 201 })),
-      http.post('http://localhost/api/users/:id/resend-link', () =>
-        new HttpResponse(null, { status: 200 })),
       http.get('http://localhost/api/dashboard', () =>
         HttpResponse.json({ totalTasks: 10, tasksByStatus: {}, overdueTasks: 0, progressPercent: 50, categoryProgress: [], recentTasks: [], myTaskCount: 3 })),
       http.post('http://localhost/api/voice/transcribe', () =>
@@ -106,20 +100,12 @@ describe('API client', () => {
   });
 
   describe('request() base function', () => {
-    it('redirects to /login on 401', async () => {
+    it('redirects to OIDC login on 401', async () => {
       server.use(
         http.get('http://localhost/api/health', () => new HttpResponse(null, { status: 401 })),
       );
       await expect(client.health.check()).rejects.toThrow('Unauthorized');
-      expect(window.location.href).toBe('/login');
-    });
-
-    it('does not redirect when already on /login', async () => {
-      window.location.pathname = '/login';
-      server.use(
-        http.get('http://localhost/api/health', () => new HttpResponse(null, { status: 401 })),
-      );
-      await expect(client.health.check()).rejects.toThrow('Unauthorized');
+      expect(window.location.href).toBe('/api/auth/login?returnUrl=%2Fboard');
     });
 
     it('throws ApiError with status text on non-ok response', async () => {
@@ -139,22 +125,16 @@ describe('API client', () => {
   });
 
   describe('auth', () => {
-    it('requestLink sends POST', async () => {
-      let calledBody: unknown = null;
-      server.use(
-        http.post('http://localhost/api/auth/request-link', async ({ request }) => {
-          calledBody = await request.json();
-          return new HttpResponse(null, { status: 204 });
-        }),
-      );
-      await client.auth.requestLink({ email: 'test@test.cz' });
-      expect(calledBody).toEqual({ email: 'test@test.cz' });
+    it('login redirects to OIDC endpoint', () => {
+      client.auth.login();
+      expect(window.location.href).toBe('/api/auth/login?returnUrl=%2Fboard');
     });
 
     it('me returns auth response', async () => {
       const result = await client.auth.me();
       expect(result).toHaveProperty('name', 'Tomáš');
       expect(result).toHaveProperty('role', 'Admin');
+      expect(result).toHaveProperty('email', 'tomas@baca.local');
     });
 
     it('logout sends POST', async () => {
@@ -167,18 +147,6 @@ describe('API client', () => {
       );
       await client.auth.logout();
       expect(logoutCalled).toBe(true);
-    });
-
-    it('guestLogin sends POST with pin', async () => {
-      let calledBody: unknown = null;
-      server.use(
-        http.post('http://localhost/api/auth/guest', async ({ request }) => {
-          calledBody = await request.json();
-          return new HttpResponse(null, { status: 204 });
-        }),
-      );
-      await client.auth.guestLogin({ pin: '1234' });
-      expect(calledBody).toEqual({ pin: '1234' });
     });
   });
 
@@ -386,17 +354,6 @@ describe('API client', () => {
       expect(result).toHaveProperty('name');
     });
 
-    it('resendLink sends POST', async () => {
-      let resendCalled = false;
-      server.use(
-        http.post('http://localhost/api/users/:id/resend-link', () => {
-          resendCalled = true;
-          return new HttpResponse(null, { status: 204 });
-        }),
-      );
-      await client.users.resendLink(1);
-      expect(resendCalled).toBe(true);
-    });
   });
 
   describe('dashboard', () => {

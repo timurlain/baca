@@ -33,6 +33,7 @@ public class BacaDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(u => u.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
+            entity.HasIndex(u => u.RegistraceUserId).IsUnique().HasFilter("\"RegistraceUserId\" IS NOT NULL");
             entity.Property(u => u.Role).HasConversion<string>();
 
             entity.HasOne(u => u.GameRole)

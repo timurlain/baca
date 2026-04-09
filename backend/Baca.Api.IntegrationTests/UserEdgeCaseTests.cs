@@ -3,11 +3,9 @@ using System.Net.Http.Json;
 using Baca.Api.Data;
 using Baca.Api.DTOs;
 using Baca.Api.Models;
-using Baca.Api.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Baca.Api.IntegrationTests;
 
@@ -16,8 +14,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "CreateUser_GuestRole_Returns400")]
     public async Task CreateUserGuestRole()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -36,8 +33,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "CreateUser_DuplicateEmail_Returns409")]
     public async Task CreateUserDuplicateEmail()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -57,8 +53,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "CreateUser_EmptyName_Returns400")]
     public async Task CreateUserEmptyName()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -77,8 +72,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "CreateUser_EmptyEmail_Returns400")]
     public async Task CreateUserEmptyEmail()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -97,8 +91,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "CreateUser_InvalidPhone_Returns400")]
     public async Task CreateUserInvalidPhone()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -118,8 +111,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "CreateUser_ValidPhone_Accepted")]
     public async Task CreateUserValidPhone()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -139,8 +131,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "CreateUser_NonExistentGameRole_Returns400")]
     public async Task CreateUserNonExistentGameRole()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -160,8 +151,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "UpdateUser_EmptyName_Returns400")]
     public async Task UpdateUserEmptyName()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -179,8 +169,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "UpdateUser_GuestRole_Returns400")]
     public async Task UpdateUserGuestRole()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -198,8 +187,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "UpdateUser_NotFound_Returns404")]
     public async Task UpdateUserNotFound()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -216,8 +204,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "DeactivateSelf_Returns409")]
     public async Task DeactivateSelf()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -235,8 +222,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "DeleteSelf_Returns409")]
     public async Task DeleteSelf()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -250,8 +236,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "DeleteUser_NoTasks_Succeeds")]
     public async Task DeleteUserNoTasks()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -266,8 +251,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "DeleteUser_NotFound_Returns404")]
     public async Task DeleteUserNotFound()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -281,8 +265,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "ResendLink_NotFound_Returns404")]
     public async Task ResendLinkNotFound()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -296,8 +279,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "ResendLink_UserWithNoEmail_Returns400")]
     public async Task ResendLinkNoEmail()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -327,8 +309,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "GetUsers_NonAdmin_Returns403")]
     public async Task GetUsersNonAdmin()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         using var client = factory.CreateClient();
         // Use a user ID that does not exist in the seeded DB, so the middleware
@@ -344,8 +325,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "UpdateUser_InvalidPhone_Returns400")]
     public async Task UpdateUserInvalidPhone()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -363,8 +343,7 @@ public sealed class UserEdgeCaseTests
     [Fact(DisplayName = "UpdateUser_NonExistentGameRole_Returns400")]
     public async Task UpdateUserNonExistentGameRole()
     {
-        var fakeEmail = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmail);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -379,13 +358,9 @@ public sealed class UserEdgeCaseTests
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
-    private static BacaWebApplicationFactory CreateFactory(FakeEmailService fakeEmailService)
+    private static BacaWebApplicationFactory CreateFactory()
     {
-        return new BacaWebApplicationFactory(services =>
-        {
-            services.RemoveAll<IEmailService>();
-            services.AddSingleton<IEmailService>(fakeEmailService);
-        });
+        return new BacaWebApplicationFactory();
     }
 
     private static HttpClient CreateAdminClient(BacaWebApplicationFactory factory)
@@ -447,14 +422,4 @@ public sealed class UserEdgeCaseTests
             """);
     }
 
-    private sealed class FakeEmailService : IEmailService
-    {
-        public List<(string Email, string Name, string Token)> SentMessages { get; } = [];
-
-        public Task SendMagicLinkAsync(string email, string name, string token, CancellationToken ct = default)
-        {
-            SentMessages.Add((email, name, token));
-            return Task.CompletedTask;
-        }
-    }
 }

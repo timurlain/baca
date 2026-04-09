@@ -3,11 +3,9 @@ using System.Net.Http.Json;
 using Baca.Api.Data;
 using Baca.Api.DTOs;
 using Baca.Api.Models;
-using Baca.Api.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Baca.Api.IntegrationTests;
 
@@ -16,8 +14,7 @@ public sealed class UserManagementTests
     [Fact(DisplayName = "CreateUser")]
     public async Task CreateUser()
     {
-        var fakeEmailService = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmailService);
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -38,14 +35,12 @@ public sealed class UserManagementTests
         var user = await dbContext.Users.SingleAsync(existingUser => existingUser.Email == "honza@baca.local");
         user.Name.Should().Be("Honza");
         user.Phone.Should().Be("+420123456789");
-        (await dbContext.LoginTokens.AnyAsync(token => token.UserId == user.Id)).Should().BeTrue();
-        fakeEmailService.SentMessages.Should().ContainSingle(message => message.Email == "honza@baca.local");
     }
 
     [Fact(DisplayName = "UpdateUser_ChangeRole")]
     public async Task UpdateUserChangeRole()
     {
-        await using var factory = CreateFactory(new FakeEmailService());
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -68,7 +63,7 @@ public sealed class UserManagementTests
     [Fact(DisplayName = "DeactivateUser")]
     public async Task DeactivateUser()
     {
-        await using var factory = CreateFactory(new FakeEmailService());
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -91,7 +86,7 @@ public sealed class UserManagementTests
     [Fact(DisplayName = "DeleteUser_HasTasks")]
     public async Task DeleteUserHasTasks()
     {
-        await using var factory = CreateFactory(new FakeEmailService());
+        await using var factory = CreateFactory();
         await factory.InitializeAsync();
         await ResetDatabaseAsync(factory.Services);
         await SeedAdminAsync(factory.Services);
@@ -103,34 +98,9 @@ public sealed class UserManagementTests
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
-    [Fact(DisplayName = "ResendLink")]
-    public async Task ResendLink()
+    private static BacaWebApplicationFactory CreateFactory()
     {
-        var fakeEmailService = new FakeEmailService();
-        await using var factory = CreateFactory(fakeEmailService);
-        await factory.InitializeAsync();
-        await ResetDatabaseAsync(factory.Services);
-        await SeedAdminAsync(factory.Services);
-        await SeedUserAsync(factory.Services, 2, "Petr", "petr@baca.local", UserRole.User);
-        using var client = CreateAdminClient(factory);
-
-        var response = await client.PostAsync("/api/users/2/resend-link", content: null);
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        using var scope = factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<BacaDbContext>();
-        (await dbContext.LoginTokens.CountAsync(token => token.UserId == 2)).Should().Be(1);
-        fakeEmailService.SentMessages.Should().ContainSingle(message => message.Email == "petr@baca.local");
-    }
-
-    private static BacaWebApplicationFactory CreateFactory(FakeEmailService fakeEmailService)
-    {
-        return new BacaWebApplicationFactory(services =>
-        {
-            services.RemoveAll<IEmailService>();
-            services.AddSingleton<IEmailService>(fakeEmailService);
-        });
+        return new BacaWebApplicationFactory();
     }
 
     private static HttpClient CreateAdminClient(BacaWebApplicationFactory factory)
@@ -229,14 +199,4 @@ public sealed class UserManagementTests
             """);
     }
 
-    private sealed class FakeEmailService : IEmailService
-    {
-        public List<(string Email, string Name, string Token)> SentMessages { get; } = [];
-
-        public Task SendMagicLinkAsync(string email, string name, string token, CancellationToken ct = default)
-        {
-            SentMessages.Add((email, name, token));
-            return Task.CompletedTask;
-        }
-    }
 }
