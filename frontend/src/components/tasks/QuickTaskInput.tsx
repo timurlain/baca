@@ -2,18 +2,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { tasks as tasksApi, voice } from '@/api/client';
 import { useQuickTaskDefaults } from '@/hooks/useQuickTaskDefaults';
 import useVoiceRecorder from '@/hooks/useVoiceRecorder';
+import { isConfirmWord } from '@/utils/confirmWords';
 
 interface QuickTaskInputProps {
   onTaskCreated: () => void;
-}
-
-const CONFIRM_WORDS = new Set([
-  'jo', 'ano', 'ok', 'okay', 'hotovo', 'yes', 'jasně', 'jasne', 'správně', 'spravne', 'tak',
-]);
-
-export function isConfirmWord(text: string): boolean {
-  const normalized = text.trim().toLowerCase();
-  return normalized.length > 0 && CONFIRM_WORDS.has(normalized);
 }
 
 type VoicePhase = 'idle' | 'recording' | 'transcribing' | 'confirm';

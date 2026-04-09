@@ -109,7 +109,7 @@ describe('QuickTaskInput', () => {
   });
 
   it('exports isConfirmWord that recognizes Czech confirm words', async () => {
-    const { isConfirmWord } = await import('../QuickTaskInput');
+    const { isConfirmWord } = await import('@/utils/confirmWords');
     expect(isConfirmWord('jo')).toBe(true);
     expect(isConfirmWord('ano')).toBe(true);
     expect(isConfirmWord('hotovo')).toBe(true);

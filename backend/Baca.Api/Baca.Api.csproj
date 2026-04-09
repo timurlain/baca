@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <Version>0.5.0</Version>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- EF Core + PostgreSQL -->
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.*" />
