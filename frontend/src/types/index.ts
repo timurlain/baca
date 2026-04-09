@@ -218,17 +218,10 @@ export interface UpdateTagRequest {
 }
 
 // Auth
-export interface LoginRequest {
-  email: string;
-}
-
-export interface GuestLoginRequest {
-  pin: string;
-}
-
 export interface AuthResponse {
-  id: number;
+  id: string;
   name: string;
+  email: string;
   role: UserRole;
   avatarColor: string;
 }

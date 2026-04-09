@@ -1,4 +1,4 @@
-using Baca.Api.DTOs;
+using System.Security.Claims;
 using Baca.Api.Models;
 using Baca.Api.Services;
 
@@ -29,28 +29,20 @@ internal static class EndpointIdentity
 
     public static UserRole GetCurrentRole(HttpContext httpContext)
     {
-        if (httpContext.Items.TryGetValue("Role", out var roleValue))
+        // 1. HttpContext.Items (populated by the claims-to-items middleware)
+        if (httpContext.Items.TryGetValue("Role", out var roleValue) && roleValue is UserRole itemRole)
         {
-            return roleValue switch
-            {
-                UserRole role => role,
-                string roleText when Enum.TryParse<UserRole>(roleText, true, out var parsedRole) => parsedRole,
-                AuthResponse authResponse => authResponse.Role,
-                User user => user.Role,
-                _ => UserRole.Guest
-            };
+            return itemRole;
         }
 
-        if (httpContext.Items.TryGetValue("User", out var userValue))
+        // 2. Claims (direct OIDC path)
+        var claimRole = httpContext.User.FindFirstValue("local_user_role");
+        if (claimRole is not null && Enum.TryParse<UserRole>(claimRole, out var parsedRole))
         {
-            return userValue switch
-            {
-                AuthResponse authResponse => authResponse.Role,
-                User user => user.Role,
-                _ => UserRole.Guest
-            };
+            return parsedRole;
         }
 
+        // 3. Testing headers
         if (IsTestingEnvironment(httpContext)
             && httpContext.Request.Headers.TryGetValue(TestRoleHeader, out var roleHeader)
             && Enum.TryParse<UserRole>(roleHeader.ToString(), true, out var testRole))
@@ -63,18 +55,21 @@ internal static class EndpointIdentity
 
     public static int? GetCurrentUserId(HttpContext httpContext)
     {
-        if (!httpContext.Items.TryGetValue("User", out var userValue))
+        // 1. HttpContext.Items (populated by the claims-to-items middleware)
+        if (httpContext.Items.TryGetValue("UserId", out var userIdValue) && userIdValue is int itemUserId)
         {
-            return GetCurrentUserIdFromTestingHeader(httpContext);
+            return itemUserId;
         }
 
-        return userValue switch
+        // 2. Claims (direct OIDC path)
+        var claimUserId = httpContext.User.FindFirstValue("local_user_id");
+        if (claimUserId is not null && int.TryParse(claimUserId, out var parsedUserId))
         {
-            int userId => userId,
-            AuthResponse authResponse => authResponse.Id,
-            User user => user.Id,
-            _ => null
-        };
+            return parsedUserId;
+        }
+
+        // 3. Testing headers
+        return GetCurrentUserIdFromTestingHeader(httpContext);
     }
 
     public static bool IsAdmin(HttpContext httpContext)

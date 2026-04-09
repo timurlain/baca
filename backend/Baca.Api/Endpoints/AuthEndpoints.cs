@@ -1,7 +1,9 @@
-using Baca.Api.DTOs;
-using Baca.Api.Middleware;
-using Baca.Api.Models;
-using Baca.Api.Services;
+using System.Security.Claims;
+using Baca.Api.Data;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.EntityFrameworkCore;
 
 namespace Baca.Api.Endpoints;
 
@@ -11,93 +13,47 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth");
 
-        group.MapPost("/request-link", RequestLinkAsync);
-        group.MapGet("/verify/{token}", VerifyTokenAsync);
-        group.MapPost("/guest", GuestLoginAsync);
-        group.MapPost("/logout", Logout);
-        group.MapGet("/me", GetMeAsync);
-    }
-
-    private static async Task<IResult> RequestLinkAsync(
-        LoginRequest request,
-        IAuthService authService,
-        CancellationToken ct)
-    {
-        var sent = await authService.RequestMagicLinkAsync(request.Email, ct);
-        return sent ? Results.Ok() : Results.NotFound();
-    }
-
-    private static async Task<IResult> VerifyTokenAsync(
-        string token,
-        IAuthService authService,
-        HttpContext context,
-        CancellationToken ct)
-    {
-        var user = await authService.VerifyTokenAsync(token, ct);
-        if (user is null)
-            return Results.Unauthorized();
-
-        var cookie = await authService.GenerateSessionCookieAsync(user.Id, ct);
-        SetSessionCookie(context, cookie);
-
-        return Results.Ok(user);
-    }
-
-    private static async Task<IResult> GuestLoginAsync(
-        GuestLoginRequest request,
-        IAuthService authService,
-        HttpContext context,
-        CancellationToken ct)
-    {
-        var guest = await authService.VerifyGuestPinAsync(request.Pin, ct);
-        if (guest is null)
-            return Results.Unauthorized();
-
-        var cookie = await authService.GenerateSessionCookieAsync(guest.Id, ct);
-        SetSessionCookie(context, cookie);
-
-        return Results.Ok(guest);
-    }
-
-    private static IResult Logout(HttpContext context)
-    {
-        context.Response.Cookies.Delete(AuthMiddleware.CookieName, new CookieOptions
+        group.MapGet("/login", (HttpContext context, string? returnUrl) =>
         {
-            Path = "/",
-            HttpOnly = true
+            // Prevent open redirects
+            if (string.IsNullOrEmpty(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
+                returnUrl = "/";
+
+            var properties = new AuthenticationProperties { RedirectUri = returnUrl };
+            return Results.Challenge(properties, [OpenIdConnectDefaults.AuthenticationScheme]);
         });
-        return Results.Ok();
-    }
 
-    private static async Task<IResult> GetMeAsync(
-        HttpContext context,
-        IAuthService authService,
-        CancellationToken ct)
-    {
-        var cookie = context.Request.Cookies[AuthMiddleware.CookieName];
-        if (string.IsNullOrEmpty(cookie))
-            return Results.Unauthorized();
-
-        var userId = await authService.ValidateSessionCookieAsync(cookie, ct);
-        if (userId is null)
-            return Results.Unauthorized();
-
-        var user = await authService.GetCurrentUserAsync(userId.Value, ct);
-        if (user is null)
-            return Results.Unauthorized();
-
-        return Results.Ok(user);
-    }
-
-    private static void SetSessionCookie(HttpContext context, string cookie)
-    {
-        context.Response.Cookies.Append(AuthMiddleware.CookieName, cookie, new CookieOptions
+        group.MapPost("/logout", async (HttpContext context) =>
         {
-            HttpOnly = true,
-            Secure = context.Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
-            MaxAge = TimeSpan.FromDays(365),
-            Path = "/"
+            await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Results.Ok();
         });
+
+        group.MapGet("/me", async (HttpContext context, BacaDbContext db, CancellationToken ct) =>
+        {
+            var user = context.User;
+            if (user.Identity?.IsAuthenticated != true)
+                return Results.Unauthorized();
+
+            var localUserIdStr = user.FindFirstValue("local_user_id");
+            if (!int.TryParse(localUserIdStr, out var localUserId))
+                return Results.Unauthorized();
+
+            // Fetch from DB to get current avatar color and role
+            var dbUser = await db.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == localUserId, ct);
+
+            if (dbUser is null || dbUser.IsDeleted || !dbUser.IsActive)
+                return Results.Unauthorized();
+
+            return Results.Ok(new
+            {
+                id = dbUser.Id,
+                name = dbUser.Name,
+                email = dbUser.Email ?? "",
+                role = dbUser.Role.ToString(),
+                avatarColor = dbUser.AvatarColor,
+            });
+        }).RequireAuthorization();
     }
 }

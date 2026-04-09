@@ -206,7 +206,7 @@ export default function UserManagement() {
   };
 
   const handleToggleActive = async (user: User) => {
-    if (currentUser && user.id === currentUser.id) {
+    if (currentUser && String(user.id) === currentUser.id) {
       setMessage({ text: 'Nelze deaktivovat sám sebe', type: 'error' });
       return;
     }
@@ -215,15 +215,6 @@ export default function UserManagement() {
       setUserList((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     } catch {
       setMessage({ text: 'Chyba při změně stavu', type: 'error' });
-    }
-  };
-
-  const handleResendLink = async (userId: number) => {
-    try {
-      await users.resendLink(userId);
-      setMessage({ text: 'Odkaz odeslán', type: 'success' });
-    } catch {
-      setMessage({ text: 'Chyba při odesílání odkazu', type: 'error' });
     }
   };
 
@@ -254,7 +245,7 @@ export default function UserManagement() {
           user={editingUser}
           onSave={handleEditUser}
           onCancel={() => setEditingUser(null)}
-          isSelf={currentUser !== null && editingUser.id === currentUser.id}
+          isSelf={currentUser !== null && String(editingUser.id) === currentUser.id}
         />
       )}
 
@@ -308,15 +299,8 @@ export default function UserManagement() {
                         Upravit
                       </button>
                       <button
-                        onClick={() => handleResendLink(user.id)}
-                        className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1"
-                        title="Znovu odeslat odkaz"
-                      >
-                        Odkaz
-                      </button>
-                      <button
                         onClick={() => handleToggleActive(user)}
-                        className={`text-xs px-2 py-1 ${currentUser !== null && user.id === currentUser.id ? 'opacity-30 cursor-not-allowed text-gray-400' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`text-xs px-2 py-1 ${currentUser !== null && String(user.id) === currentUser.id ? 'opacity-30 cursor-not-allowed text-gray-400' : 'text-gray-500 hover:text-gray-700'}`}
                         title={user.isActive ? 'Deaktivovat' : 'Aktivovat'}
                       >
                         {user.isActive ? 'Deaktivovat' : 'Aktivovat'}

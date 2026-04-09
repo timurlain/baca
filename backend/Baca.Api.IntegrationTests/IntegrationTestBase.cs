@@ -1,6 +1,4 @@
-using System.Net.Http.Json;
 using Baca.Api.Data;
-using Baca.Api.DTOs;
 using Baca.Api.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,26 +26,9 @@ public abstract class IntegrationTestBase : IClassFixture<BacaWebApplicationFact
             _ => await EnsureUserAsync(db, role)
         };
 
-        if (role == UserRole.Guest)
-        {
-            await EnsureGuestPinAsync(db);
-            var guestClient = Factory.CreateClient();
-            await guestClient.PostAsJsonAsync("/api/auth/guest",
-                new GuestLoginRequest { Pin = "ovcina2026" });
-            return guestClient;
-        }
-
-        var loginToken = new LoginToken
-        {
-            UserId = user.Id,
-            Token = Guid.NewGuid().ToString(),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(15)
-        };
-        db.LoginTokens.Add(loginToken);
-        await db.SaveChangesAsync();
-
         var client = Factory.CreateClient();
-        await client.GetAsync($"/api/auth/verify/{loginToken.Token}");
+        client.DefaultRequestHeaders.Add("X-Test-Role", role.ToString());
+        client.DefaultRequestHeaders.Add("X-Test-User-Id", user.Id.ToString(System.Globalization.CultureInfo.InvariantCulture));
         return client;
     }
 
@@ -80,17 +61,6 @@ public abstract class IntegrationTestBase : IClassFixture<BacaWebApplicationFact
         db.Users.Add(guest);
         await db.SaveChangesAsync();
         return guest;
-    }
-
-    protected static async Task EnsureGuestPinAsync(BacaDbContext db)
-    {
-        var settings = await db.AppSettings.FindAsync(1);
-        if (settings is not null)
-            return;
-
-        var hashedPin = BCrypt.Net.BCrypt.HashPassword("ovcina2026");
-        db.AppSettings.Add(new AppSettings { Id = 1, GuestPin = hashedPin });
-        await db.SaveChangesAsync();
     }
 
     protected static async Task<TaskItem> CreateTestTaskAsync(

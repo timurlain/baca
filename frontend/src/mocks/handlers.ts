@@ -88,14 +88,12 @@ export const handlers = [
   ),
 
   // Auth
-  http.post('/api/auth/request-link', () => new HttpResponse(null, { status: 200 })),
-  http.get('/api/auth/verify/:token', () => new HttpResponse(null, { status: 302 })),
-  http.post('/api/auth/guest', () => new HttpResponse(null, { status: 200 })),
   http.post('/api/auth/logout', () => new HttpResponse(null, { status: 200 })),
   http.get('/api/auth/me', () =>
     HttpResponse.json<AuthResponse>({
-      id: 1,
+      id: '1',
       name: 'Tomáš',
+      email: 'tomas@baca.local',
       role: UserRole.Admin,
       avatarColor: '#10B981',
     }),
@@ -159,7 +157,6 @@ export const handlers = [
   http.get('/api/users', () => HttpResponse.json(mockUsers)),
   http.post('/api/users', () => HttpResponse.json(mockUsers[0], { status: 201 })),
   http.put('/api/users/:id', () => HttpResponse.json(mockUsers[0])),
-  http.post('/api/users/:id/resend-link', () => new HttpResponse(null, { status: 200 })),
 
   // Dashboard
   http.get('/api/dashboard', () =>

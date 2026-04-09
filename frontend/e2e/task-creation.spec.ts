@@ -26,11 +26,9 @@ async function loginAsGuest(page: Page) {
   await page.goto('/login');
   await page.waitForLoadState('domcontentloaded');
   const status = await page.evaluate(async () => {
-    const resp = await fetch('/api/auth/guest', {
+    const resp = await fetch('/api/test/login/guest@baca.local', {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: 'ovcina2026' }),
     });
     return { status: resp.status, text: await resp.text() };
   });

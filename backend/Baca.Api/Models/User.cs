@@ -26,6 +26,12 @@ public class User
     [MaxLength(7)]
     public string AvatarColor { get; set; } = "#3B82F6";
 
+    /// <summary>
+    /// The "sub" claim from registrace-ovcina OIDC. Used to link the local user to the external identity.
+    /// </summary>
+    [MaxLength(200)]
+    public string? RegistraceUserId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public bool IsActive { get; set; } = true;

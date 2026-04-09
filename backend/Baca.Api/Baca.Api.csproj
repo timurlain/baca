@@ -11,11 +11,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <!-- Auth -->
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.*" />
+    <!-- Auth (OIDC via registrace-ovcina) -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.5" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.*" />
     <!-- External services -->
-    <PackageReference Include="Azure.Communication.Email" Version="1.*" />
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.*" />
     <PackageReference Include="Anthropic.SDK" Version="*" />
     <PackageReference Include="Twilio" Version="7.*" />

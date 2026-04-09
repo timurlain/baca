@@ -1,7 +1,6 @@
 using Baca.Api.Data;
 using Baca.Api.DTOs;
 using Baca.Api.Models;
-using Baca.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Baca.Api.Endpoints;
@@ -28,7 +27,6 @@ public static class UserEndpoints
         group.MapPost("/", CreateUserAsync);
         group.MapPut("/{id:int}", UpdateUserAsync);
         group.MapDelete("/{id:int}", DeleteUserAsync);
-        group.MapPost("/{id:int}/resend-link", ResendLinkAsync);
     }
 
     private static async Task<IResult> GetUsersAsync(
@@ -67,8 +65,6 @@ public static class UserEndpoints
     private static async Task<IResult> CreateUserAsync(
         HttpContext httpContext,
         BacaDbContext dbContext,
-        IEmailService emailService,
-        TimeProvider timeProvider,
         CreateUserRequest request,
         CancellationToken ct)
     {
@@ -103,21 +99,8 @@ public static class UserEndpoints
             AvatarColor = GenerateAvatarColor(email)
         };
 
-        var token = CreateLoginToken(timeProvider);
-        user.LoginTokens.Add(token);
-
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync(ct);
-
-        try
-        {
-            await emailService.SendMagicLinkAsync(email, user.Name, token.Token, ct);
-        }
-        catch
-        {
-            // User is already saved — don't fail the request if email sending fails.
-            // Admin can resend the link later.
-        }
 
         await dbContext.Entry(user)
             .Reference(createdUser => createdUser.GameRole)
@@ -249,45 +232,6 @@ public static class UserEndpoints
         return Results.Ok();
     }
 
-    private static async Task<IResult> ResendLinkAsync(
-        HttpContext httpContext,
-        BacaDbContext dbContext,
-        IEmailService emailService,
-        TimeProvider timeProvider,
-        int id,
-        CancellationToken ct)
-    {
-        if (!EndpointIdentity.IsAdmin(httpContext))
-        {
-            return Results.StatusCode(StatusCodes.Status403Forbidden);
-        }
-
-        var user = await dbContext.Users.FirstOrDefaultAsync(existingUser => existingUser.Id == id, ct);
-        if (user is null)
-        {
-            return Results.NotFound();
-        }
-
-        if (string.IsNullOrWhiteSpace(user.Email))
-        {
-            return Results.BadRequest("Uživatel nemá e-mail pro magic link.");
-        }
-
-        var token = CreateLoginToken(timeProvider);
-        dbContext.LoginTokens.Add(new LoginToken
-        {
-            UserId = user.Id,
-            Token = token.Token,
-            ExpiresAt = token.ExpiresAt,
-            IsUsed = false
-        });
-
-        await dbContext.SaveChangesAsync(ct);
-        await emailService.SendMagicLinkAsync(user.Email, user.Name, token.Token, ct);
-
-        return Results.Ok();
-    }
-
     private static async Task<IResult?> ValidateUserInputAsync(
         BacaDbContext dbContext,
         string name,
@@ -341,16 +285,6 @@ public static class UserEndpoints
         }
 
         return null;
-    }
-
-    private static LoginToken CreateLoginToken(TimeProvider timeProvider)
-    {
-        return new LoginToken
-        {
-            Token = Guid.NewGuid().ToString("D"),
-            ExpiresAt = timeProvider.GetUtcNow().UtcDateTime.AddDays(7),
-            IsUsed = false
-        };
     }
 
     private static string GenerateAvatarColor(string seed)

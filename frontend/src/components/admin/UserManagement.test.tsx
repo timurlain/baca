@@ -25,7 +25,7 @@ function setup() {
   server.use(
     http.get('/api/users', () => HttpResponse.json(mockUsers)),
     http.get('/api/auth/me', () =>
-      HttpResponse.json({ id: 1, name: 'Tomáš', role: UserRole.Admin, avatarColor: '#10B981' }),
+      HttpResponse.json({ id: '1', name: 'Tomáš', email: 'tomas@baca.local', role: UserRole.Admin, avatarColor: '#10B981' }),
     ),
   );
 }
@@ -86,23 +86,6 @@ describe('UserManagement', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Neaktivní')).toBeInTheDocument();
-    });
-  });
-
-  it('resend link button calls API', async () => {
-    setup();
-    server.use(
-      http.post('/api/users/:id/resend-link', () => new HttpResponse(null, { status: 204 })),
-    );
-    const user = userEvent.setup();
-    renderInRouter(<UserManagement />);
-    await screen.findByText('Tomáš');
-
-    const resendButtons = screen.getAllByText('Odkaz');
-    await user.click(resendButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText('Odkaz odeslán')).toBeInTheDocument();
     });
   });
 
