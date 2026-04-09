@@ -32,7 +32,7 @@ export default function Header() {
           <Link to="/" className="text-xl font-bold flex items-center space-x-2">
             <span className="bg-white text-forest-800 w-8 h-8 rounded flex items-center justify-center">B</span>
             <span className="hidden sm:inline">{DEFAULT_APP_NAME}</span>
-            <span className="text-[10px] text-green-300 font-normal ml-1 hidden sm:inline">v0.5.0</span>
+            <span className="text-[10px] text-green-300 font-normal ml-1 hidden sm:inline">v{__APP_VERSION__}</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-4">
