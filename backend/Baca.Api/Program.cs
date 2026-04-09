@@ -265,6 +265,14 @@ static async Task SeedDataAsync(WebApplication app)
             AvatarColor = "#10B981"
         });
 
+        db.Users.Add(new User
+        {
+            Name = "Host",
+            Email = "guest@baca.local",
+            Role = UserRole.Guest,
+            AvatarColor = "#6B7280"
+        });
+
         await db.SaveChangesAsync();
     }
 
