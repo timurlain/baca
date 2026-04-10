@@ -79,7 +79,7 @@ builder.Services.AddAuthentication(options =>
     options.ResponseType = "code";
     options.UsePkce = true;
     options.SaveTokens = true;
-    options.CallbackPath = "/auth/callback";
+    options.CallbackPath = "/api/auth/callback";
 
     options.Scope.Clear();
     options.Scope.Add("openid");
