@@ -162,6 +162,16 @@ var app = builder.Build();
 await SeedDataAsync(app);
 
 // Middleware
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+        | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+        | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedHost,
+};
+// Azure Container Apps: trust any proxy
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseCors();
 app.UseAuthentication();
 app.UseMiddleware<TokenRefreshMiddleware>();
