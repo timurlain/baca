@@ -94,6 +94,18 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters.NameClaimType = "name";
     options.TokenValidationParameters.RoleClaimType = "role";
 
+    // Fix redirect_uri behind Azure Container Apps proxy
+    options.Events.OnRedirectToIdentityProvider = context =>
+    {
+        var baseUrl = context.HttpContext.RequestServices
+            .GetRequiredService<IConfiguration>()["App:BaseUrl"];
+        if (!string.IsNullOrEmpty(baseUrl))
+        {
+            context.ProtocolMessage.RedirectUri = $"{baseUrl.TrimEnd('/')}{options.CallbackPath}";
+        }
+        return Task.CompletedTask;
+    };
+
     options.Events.OnTokenValidated = async context =>
     {
         var db = context.HttpContext.RequestServices.GetRequiredService<BacaDbContext>();
