@@ -58,7 +58,7 @@ builder.Services.AddAuthentication(options =>
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Events.OnRedirectToLogin = context =>
     {
         // For API calls, return 401 instead of redirect
@@ -93,6 +93,9 @@ builder.Services.AddAuthentication(options =>
 
     options.TokenValidationParameters.NameClaimType = "name";
     options.TokenValidationParameters.RoleClaimType = "role";
+    // OpenIddict gotchas: issuer has trailing slash, disable audience validation
+    options.TokenValidationParameters.ValidIssuer = builder.Configuration["Oidc:Authority"]?.TrimEnd('/') + "/";
+    options.TokenValidationParameters.ValidateAudience = false;
 
     // Fix redirect_uri behind Azure Container Apps proxy
     options.Events.OnRedirectToIdentityProvider = context =>
