@@ -28,6 +28,7 @@ public class TaskDto
     public int SubTaskCount { get; set; }
     public int SubTaskDoneCount { get; set; }
     public int CommentCount { get; set; }
+    public int ImageCount { get; set; }
     public List<TagDto> Tags { get; set; } = [];
 }
 
