@@ -61,12 +61,25 @@ async function request<T>(
   });
 
   if (res.status === 401) {
-    const path = window.location.pathname;
-    if (!path.startsWith('/login')) {
-      const returnUrl = encodeURIComponent(path + window.location.search);
+    const currentPath = window.location.pathname;
+    if (!currentPath.startsWith('/login')) {
+      const returnUrl = encodeURIComponent(currentPath + window.location.search);
       window.location.href = `/api/auth/login?returnUrl=${returnUrl}`;
     }
     throw new ApiError(401, 'Unauthorized');
+  }
+
+  if (res.status === 403) {
+    const body = await res.text();
+    try {
+      const data = JSON.parse(body);
+      if (data.detail) {
+        throw new ApiError(403, data.detail);
+      }
+    } catch (e) {
+      if (e instanceof ApiError) throw e;
+    }
+    throw new ApiError(403, body || 'Přístup odepřen');
   }
 
   if (!res.ok) {
