@@ -27,6 +27,7 @@ import type {
   BulkParseResponse,
   DashboardData,
   FocusTask,
+  TaskImage,
   AppSettings,
   UpdateSettingsRequest,
   HealthResponse,
@@ -177,6 +178,22 @@ export const comments = {
     get<Comment[]>(`/api/tasks/${taskId}/comments`),
   create: (taskId: number, data: CreateCommentRequest) =>
     post<Comment>(`/api/tasks/${taskId}/comments`, data),
+};
+
+// Images
+export const images = {
+  list: (taskId: number) =>
+    get<TaskImage[]>(`/api/tasks/${taskId}/images`),
+  upload: (taskId: number, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request<TaskImage>(`/api/tasks/${taskId}/images`, {
+      method: 'POST',
+      body: form,
+    });
+  },
+  delete: (taskId: number, imageId: number) =>
+    del(`/api/tasks/${taskId}/images/${imageId}`),
 };
 
 // Categories

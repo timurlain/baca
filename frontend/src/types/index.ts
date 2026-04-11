@@ -80,7 +80,15 @@ export interface TaskItem {
   subTaskCount: number;
   subTaskDoneCount: number;
   commentCount: number;
+  imageCount: number;
   tags: Tag[];
+}
+
+// Task Image
+export interface TaskImage {
+  id: number;
+  fileName: string;
+  url: string | null;
 }
 
 export interface TaskDetail {
