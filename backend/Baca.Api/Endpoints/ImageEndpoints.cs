@@ -22,12 +22,11 @@ public static class ImageEndpoints
                 .Select(i => new { i.Id, i.FileName, i.BlobKey })
                 .ToListAsync();
 
-            var result = new List<TaskImageDto>();
-            foreach (var img in images)
+            var result = await Task.WhenAll(images.Select(async img =>
             {
                 var url = await blob.GetSasUrlAsync(img.BlobKey);
-                result.Add(new TaskImageDto(img.Id, img.FileName, url));
-            }
+                return new TaskImageDto(img.Id, img.FileName, url);
+            }));
 
             return Results.Ok(result);
         });
@@ -36,6 +35,8 @@ public static class ImageEndpoints
         {
             var userId = context.Items["UserId"] as int?;
             if (userId is null) return Results.Unauthorized();
+            var role = context.Items["Role"] as Baca.Api.Models.UserRole?;
+            if (role == Baca.Api.Models.UserRole.Guest) return Results.Forbid();
 
             if (file.Length == 0) return Results.BadRequest("Prázdný soubor.");
             if (file.Length > MaxFileSize) return Results.BadRequest("Soubor je příliš velký (max 5 MB).");
@@ -70,6 +71,8 @@ public static class ImageEndpoints
         {
             var userId = context.Items["UserId"] as int?;
             if (userId is null) return Results.Unauthorized();
+            var role = context.Items["Role"] as Baca.Api.Models.UserRole?;
+            if (role == Baca.Api.Models.UserRole.Guest) return Results.Forbid();
 
             var image = await db.TaskImages.FirstOrDefaultAsync(i => i.Id == imageId && i.TaskId == taskId);
             if (image is null) return Results.NotFound();

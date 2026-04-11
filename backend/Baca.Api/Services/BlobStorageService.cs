@@ -14,6 +14,7 @@ public interface IBlobStorageService
 public class BlobStorageService : IBlobStorageService
 {
     private readonly BlobContainerClient _container;
+    private bool _containerEnsured;
 
     public BlobStorageService(IConfiguration config)
     {
@@ -23,11 +24,18 @@ public class BlobStorageService : IBlobStorageService
             ?? "baca-images";
 
         _container = new BlobContainerClient(connectionString, containerName);
-        _container.CreateIfNotExists(PublicAccessType.None);
+    }
+
+    private async Task EnsureContainerAsync()
+    {
+        if (_containerEnsured) return;
+        await _container.CreateIfNotExistsAsync(PublicAccessType.None);
+        _containerEnsured = true;
     }
 
     public async Task<string> UploadAsync(string blobKey, Stream content, string contentType)
     {
+        await EnsureContainerAsync();
         var blob = _container.GetBlobClient(blobKey);
         await blob.UploadAsync(content, new BlobHttpHeaders { ContentType = contentType });
         return blobKey;
