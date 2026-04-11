@@ -26,7 +26,7 @@ export default function TaskCard({ task, onSelect, onAssignMe, isDraggable = tru
   return (
     <div
       className={cn(
-        "bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3 hover:shadow-md transition-shadow cursor-pointer group",
+        "bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 mb-2 hover:shadow-md transition-shadow cursor-pointer group",
         isDraggable ? "active:cursor-grabbing" : ""
       )}
       onClick={() => onSelect(task)}
