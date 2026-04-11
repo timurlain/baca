@@ -63,9 +63,10 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
       // Non-critical data — load separately, don't break the modal
       usersApi.list().then(setAllUsers).catch(() => setAllUsers([]));
       imagesApi.list(taskId).then(setTaskImages).catch(() => setTaskImages([]));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch task detail:', err);
-      setFetchError(err?.message || `Chyba při načítání (${err?.status || 'síť'})`);
+      const msg = err instanceof Error ? err.message : 'Neznámá chyba';
+      setFetchError(msg);
     } finally {
       setLoading(false);
     }
