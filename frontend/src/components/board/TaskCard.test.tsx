@@ -26,6 +26,7 @@ function makeTask(overrides: Partial<TaskItem> = {}): TaskItem {
     assigneeId: 1,
     assigneeName: 'Tomáš',
     assigneeAvatarColor: '#10B981',
+    assigneeEmail: null,
     assigneeShortcut: null,
     parentTaskId: null,
     dueDate: null,
@@ -103,19 +104,11 @@ describe('TaskCard', () => {
     expect(onSelect).toHaveBeenCalledWith(task);
   });
 
-  it('shows subtask count when present', () => {
-    render(<TaskCard task={makeTask({ subTaskCount: 5, subTaskDoneCount: 3 })} onSelect={vi.fn()} />);
-    expect(screen.getByText('3/5')).toBeInTheDocument();
-  });
-
-  it('shows comment count when present', () => {
-    render(<TaskCard task={makeTask({ commentCount: 7 })} onSelect={vi.fn()} />);
-    expect(screen.getByText('7')).toBeInTheDocument();
-  });
-
-  it('hides subtask and comment counts when zero', () => {
-    render(<TaskCard task={makeTask({ subTaskCount: 0, commentCount: 0 })} onSelect={vi.fn()} />);
-    expect(screen.queryByText('0/0')).not.toBeInTheDocument();
+  it('does not show subtask/comment counts in compact card', () => {
+    render(<TaskCard task={makeTask({ subTaskCount: 5, subTaskDoneCount: 3, commentCount: 7 })} onSelect={vi.fn()} />);
+    // Compact 2-row card doesn't render subtask/comment counts
+    expect(screen.queryByText('3/5')).not.toBeInTheDocument();
+    expect(screen.queryByText('7')).not.toBeInTheDocument();
   });
 
   it('shows overdue styling for past due dates on non-Done tasks', () => {
@@ -145,7 +138,7 @@ describe('TaskCard', () => {
     expect(onAssignMe).toHaveBeenCalledWith(1);
   });
 
-  it('hides assign button for guest users', () => {
+  it('disables assign button for guest users', () => {
     mockUser.role = UserRole.Guest;
     render(
       <TaskCard
@@ -153,7 +146,8 @@ describe('TaskCard', () => {
         onSelect={vi.fn()}
       />,
     );
-    expect(screen.queryByLabelText('Vezmu si to')).not.toBeInTheDocument();
+    const btn = screen.getByLabelText('Nepřiřazeno');
+    expect(btn).toBeDisabled();
     mockUser.role = UserRole.Admin;
   });
 });

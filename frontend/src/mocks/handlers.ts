@@ -67,6 +67,7 @@ const mockTasks: TaskItem[] = [
     assigneeName: 'Tomáš',
     assigneeShortcut: 'TO',
     assigneeAvatarColor: '#10B981',
+    assigneeEmail: 'test@baca.local',
     parentTaskId: null,
     dueDate: '2026-05-01T00:00:00Z',
     sortOrder: 0,
