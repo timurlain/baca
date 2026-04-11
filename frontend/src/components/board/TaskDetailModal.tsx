@@ -1,10 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { TaskDetail, TaskStatus, Priority, User, Category, Tag, TaskItem, UpdateTaskRequest } from '@/types';
 import { UserRole } from '@/types';
-import { tasks as tasksApi, categories as categoriesApi, users as usersApi, tags as tagsApi } from '@/api/client';
+import { tasks as tasksApi, categories as categoriesApi, users as usersApi, tags as tagsApi, comments as commentsApi } from '@/api/client';
 import { useAuth } from '@/hooks/useAuth';
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS } from '@/utils/constants';
-import { cn } from '@/utils/helpers';
+import { cn, formatDate } from '@/utils/helpers';
+
+function formatRelativeTime(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'právě teď';
+  if (mins < 60) return `${mins} min`;
+  const hrs = Math.floor(diffMs / 3600000);
+  if (hrs < 24) return `${hrs} hod`;
+  const days = Math.floor(diffMs / 86400000);
+  if (days === 1) return 'včera';
+  if (days < 7) return `${days} dní`;
+  return formatDate(dateStr);
+}
 import Avatar from '../shared/Avatar';
 import ConfirmDialog from '../shared/ConfirmDialog';
 
@@ -27,6 +40,8 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [addingSubtask, setAddingSubtask] = useState(false);
   const [showSubtaskForm, setShowSubtaskForm] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
   const isGuest = user?.role === UserRole.Guest;
 
   const fetchData = useCallback(async () => {
@@ -100,6 +115,22 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
       fetchData();
     } catch (err) {
       console.error('Failed to update subtask status:', err);
+    }
+  };
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = newComment.trim();
+    if (!text) return;
+    setSubmittingComment(true);
+    try {
+      await commentsApi.create(taskId, { text });
+      setNewComment('');
+      fetchData();
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    } finally {
+      setSubmittingComment(false);
     }
   };
 
@@ -236,10 +267,58 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                   )}
                 </div>
 
-                {/* Comments stub */}
+                {/* Comments */}
                 <div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Komentáře</h3>
-                  <div className="text-sm text-gray-500 italic">Zatím neimplementováno.</div>
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    Komentáře
+                    {task.comments.length > 0 && (
+                      <span className="ml-1 text-gray-500 normal-case font-normal">
+                        ({task.comments.length})
+                      </span>
+                    )}
+                  </h3>
+
+                  <div className="space-y-3">
+                    {task.comments.map(comment => (
+                      <div key={comment.id} className="flex gap-3">
+                        <Avatar
+                          name={comment.authorName}
+                          color={comment.authorAvatarColor}
+                          size="sm"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-medium text-gray-900">{comment.authorName}</span>
+                            <span className="text-xs text-gray-400">{formatRelativeTime(comment.createdAt)}</span>
+                          </div>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap break-words mt-0.5">{comment.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {task.comments.length === 0 && (
+                      <p className="text-xs text-gray-400 italic">Zatím žádné komentáře</p>
+                    )}
+                  </div>
+
+                  {!isGuest && (
+                    <form onSubmit={handleAddComment} className="mt-3 flex gap-2">
+                      <input
+                        type="text"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Napsat komentář..."
+                        maxLength={2000}
+                        className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-forest-600"
+                      />
+                      <button
+                        type="submit"
+                        disabled={submittingComment || !newComment.trim()}
+                        className="text-sm bg-forest-700 text-white rounded-lg px-4 py-2 hover:bg-forest-800 disabled:opacity-50 shrink-0"
+                      >
+                        Odeslat
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
 
