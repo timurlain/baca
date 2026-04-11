@@ -44,6 +44,7 @@ builder.Services.AddSingleton<ITwilioWhatsAppClient, TwilioWhatsAppClient>();
 builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
 
 builder.Services.AddHttpClient("OidcTokenRefresh");
+builder.Services.AddSingleton<Baca.Api.Services.IBlobStorageService, Baca.Api.Services.BlobStorageService>();
 
 // Authentication — OIDC via registrace-ovcina
 builder.Services.AddAuthentication(options =>
@@ -228,6 +229,7 @@ app.MapVoiceEndpoints();
 app.MapSettingsEndpoints();
 app.MapTagEndpoints();
 app.MapTrashEndpoints();
+app.MapImageEndpoints();
 
 // Test-only endpoint for E2E authentication (never available in Production)
 if (!app.Environment.IsProduction())

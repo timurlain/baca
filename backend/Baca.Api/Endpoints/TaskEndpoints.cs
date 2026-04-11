@@ -444,6 +444,7 @@ public static class TaskEndpoints
         SubTaskCount = t.Subtasks.Count,
         SubTaskDoneCount = t.Subtasks.Count(s => s.Status == TaskItemStatus.Done),
         CommentCount = t.Comments.Count,
+        ImageCount = t.Images.Count,
         Tags = t.Tags.OrderBy(tg => tg.Name).Select(tg => new TagDto
         {
             Id = tg.Id,

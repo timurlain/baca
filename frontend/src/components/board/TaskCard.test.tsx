@@ -38,6 +38,7 @@ function makeTask(overrides: Partial<TaskItem> = {}): TaskItem {
     subTaskCount: 0,
     subTaskDoneCount: 0,
     commentCount: 0,
+    imageCount: 0,
     tags: [],
     ...overrides,
   };

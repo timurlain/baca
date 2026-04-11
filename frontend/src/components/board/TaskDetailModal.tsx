@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { TaskDetail, TaskStatus, Priority, User, Category, Tag, TaskItem, UpdateTaskRequest } from '@/types';
 import { UserRole } from '@/types';
-import { tasks as tasksApi, categories as categoriesApi, users as usersApi, tags as tagsApi, comments as commentsApi } from '@/api/client';
+import type { TaskImage } from '@/types';
+import { tasks as tasksApi, categories as categoriesApi, users as usersApi, tags as tagsApi, comments as commentsApi, images as imagesApi } from '@/api/client';
 import { useAuth } from '@/hooks/useAuth';
 import { STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS } from '@/utils/constants';
 import { cn, formatDate } from '@/utils/helpers';
@@ -42,21 +43,25 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   const [showSubtaskForm, setShowSubtaskForm] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [taskImages, setTaskImages] = useState<TaskImage[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const isGuest = user?.role === UserRole.Guest;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [detail, usersData, categoriesData, tagsData] = await Promise.all([
+      const [detail, usersData, categoriesData, tagsData, imagesData] = await Promise.all([
         tasksApi.get(taskId),
         usersApi.list(),
         categoriesApi.list(),
         tagsApi.list(),
+        imagesApi.list(taskId),
       ]);
       setTask(detail);
       setAllUsers(usersData);
       setAllCategories(categoriesData);
       setAllTags(tagsData);
+      setTaskImages(imagesData);
     } catch (err) {
       console.error('Failed to fetch task detail:', err);
     } finally {
@@ -134,6 +139,32 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const uploaded = await imagesApi.upload(taskId, file);
+      setTaskImages(prev => [...prev, uploaded]);
+      onUpdate();
+    } catch (err) {
+      console.error('Failed to upload image:', err);
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleImageDelete = async (imageId: number) => {
+    try {
+      await imagesApi.delete(taskId, imageId);
+      setTaskImages(prev => prev.filter(i => i.id !== imageId));
+      onUpdate();
+    } catch (err) {
+      console.error('Failed to delete image:', err);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -179,6 +210,67 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                       onChange={(e) => setTask({ ...task, description: e.target.value })}
                       onBlur={() => handleUpdate({ description: task.description })}
                     />
+                  )}
+                </div>
+
+                {/* Images */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                      Obrázky
+                      {taskImages.length > 0 && (
+                        <span className="ml-1 text-gray-500 normal-case font-normal">
+                          ({taskImages.length})
+                        </span>
+                      )}
+                    </h3>
+                    {!isGuest && (
+                      <label className={cn(
+                        "text-xs text-blue-600 hover:text-blue-800 font-medium cursor-pointer",
+                        uploadingImage && "opacity-50 pointer-events-none"
+                      )}>
+                        {uploadingImage ? 'Nahrávám...' : '+ Přidat'}
+                        <input
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                          disabled={uploadingImage}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  {taskImages.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {taskImages.map(img => (
+                        <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100">
+                          {img.url ? (
+                            <a href={img.url} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={img.url}
+                                alt={img.fileName}
+                                className="w-full h-full object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              {img.fileName}
+                            </div>
+                          )}
+                          {!isGuest && (
+                            <button
+                              onClick={() => handleImageDelete(img.id)}
+                              className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Smazat"
+                            >
+                              &times;
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 italic">Žádné obrázky</p>
                   )}
                 </div>
 

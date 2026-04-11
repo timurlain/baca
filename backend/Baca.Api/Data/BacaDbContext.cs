@@ -16,6 +16,7 @@ public class BacaDbContext : DbContext
     public DbSet<GameRole> GameRoles => Set<GameRole>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<TaskImage> TaskImages => Set<TaskImage>();
     public DbSet<AppSettings> AppSettings => Set<AppSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -85,6 +86,22 @@ public class BacaDbContext : DbContext
             entity.HasOne(c => c.Author)
                 .WithMany(u => u.Comments)
                 .HasForeignKey(c => c.AuthorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // TaskImage
+        modelBuilder.Entity<TaskImage>(entity =>
+        {
+            entity.HasIndex(i => i.TaskId);
+
+            entity.HasOne(i => i.Task)
+                .WithMany(t => t.Images)
+                .HasForeignKey(i => i.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.UploadedBy)
+                .WithMany()
+                .HasForeignKey(i => i.UploadedById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
