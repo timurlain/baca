@@ -69,6 +69,7 @@ export interface TaskItem {
   assigneeName: string | null;
   assigneeShortcut: string | null;
   assigneeAvatarColor: string | null;
+  assigneeEmail: string | null;
   parentTaskId: number | null;
   dueDate: string | null;
   sortOrder: number;
@@ -95,6 +96,7 @@ export interface TaskDetail {
   assigneeName: string | null;
   assigneeShortcut: string | null;
   assigneeAvatarColor: string | null;
+  assigneeEmail: string | null;
   parentTaskId: number | null;
   parentTaskTitle: string | null;
   dueDate: string | null;

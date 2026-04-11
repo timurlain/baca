@@ -17,6 +17,7 @@ public class TaskDto
     public string? AssigneeShortcut { get; set; }
 
     public string? AssigneeAvatarColor { get; set; }
+    public string? AssigneeEmail { get; set; }
     public int? ParentTaskId { get; set; }
     public DateTime? DueDate { get; set; }
     public int SortOrder { get; set; }
@@ -45,6 +46,7 @@ public class TaskDetailDto
     public string? AssigneeShortcut { get; set; }
 
     public string? AssigneeAvatarColor { get; set; }
+    public string? AssigneeEmail { get; set; }
     public int? ParentTaskId { get; set; }
     public string? ParentTaskTitle { get; set; }
     public DateTime? DueDate { get; set; }
