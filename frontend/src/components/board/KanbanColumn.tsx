@@ -38,8 +38,8 @@ export default function KanbanColumn({
   );
 
   return (
-    <div className="flex flex-col h-full w-[calc(100vw-3rem)] sm:w-auto sm:min-w-[280px] sm:max-w-[320px] bg-gray-100 rounded-lg p-2 border border-gray-200">
-      <div className="flex items-center justify-between px-2 mb-4">
+    <div className="flex flex-col h-full w-[calc(100vw-1.5rem)] sm:w-auto sm:min-w-[280px] sm:max-w-[320px] bg-gray-100 rounded-lg p-1.5 sm:p-2 border border-gray-200">
+      <div className="flex items-center justify-between px-1.5 mb-2 sm:mb-4">
         <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
           {STATUS_LABELS[status]}
         </h2>
