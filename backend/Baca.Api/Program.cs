@@ -71,6 +71,16 @@ builder.Services.AddAuthentication(options =>
         context.Response.Redirect(context.RedirectUri);
         return Task.CompletedTask;
     };
+    options.Events.OnValidatePrincipal = context =>
+    {
+        // If the cookie can't be decrypted (e.g. after container restart with new keys),
+        // reject it so the user gets a fresh login instead of a cryptic error
+        if (context.Principal?.Identity?.IsAuthenticated != true)
+        {
+            context.RejectPrincipal();
+        }
+        return Task.CompletedTask;
+    };
 })
 .AddOpenIdConnect(options =>
 {
@@ -97,6 +107,16 @@ builder.Services.AddAuthentication(options =>
     // OpenIddict gotchas: issuer has trailing slash, disable audience validation
     options.TokenValidationParameters.ValidIssuer = builder.Configuration["Oidc:Authority"]?.TrimEnd('/') + "/";
     options.TokenValidationParameters.ValidateAudience = false;
+
+    // If OIDC callback fails (e.g. stale state cookie after restart), clear cookies and retry
+    options.Events.OnRemoteFailure = context =>
+    {
+        context.Response.Cookies.Delete(".AspNetCore.Cookies");
+        context.Response.Cookies.Delete(".AspNetCore.OpenIdConnect.Nonce." + context.Properties?.Items["N"]);
+        context.Response.Redirect("/");
+        context.HandleResponse();
+        return Task.CompletedTask;
+    };
 
     // Fix redirect_uri behind Azure Container Apps proxy
     options.Events.OnRedirectToIdentityProvider = context =>
