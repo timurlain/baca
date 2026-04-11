@@ -73,14 +73,15 @@ test.describe('Board', () => {
   });
 
   test('delete task removes it from board', async ({ page }) => {
+    const taskName = `E2E Delete ${Date.now()}`;
     await page.goto('/board');
     await page.waitForLoadState('networkidle');
 
-    await createTask(page, 'E2E Delete This Task');
+    await createTask(page, taskName);
 
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await page.getByText('E2E Delete This Task').click();
+    await page.getByText(taskName).first().click();
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible({ timeout: 10000 });
