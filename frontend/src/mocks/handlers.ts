@@ -129,6 +129,11 @@ export const handlers = [
     ]),
   ),
 
+  // Images
+  http.get('/api/tasks/:taskId/images', () => HttpResponse.json([])),
+  http.post('/api/tasks/:taskId/images', () => HttpResponse.json({ id: 1, fileName: 'test.jpg', url: null }, { status: 201 })),
+  http.delete('/api/tasks/:taskId/images/:imageId', () => new HttpResponse(null, { status: 204 })),
+
   // Comments
   http.get('/api/tasks/:taskId/comments', () => HttpResponse.json([])),
   http.post('/api/tasks/:taskId/comments', () =>
