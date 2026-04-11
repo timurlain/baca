@@ -29,13 +29,10 @@ export default function Avatar({
 }: AvatarProps) {
   const [imgFailed, setImgFailed] = useState(false);
   const [gravatarUrl, setGravatarUrl] = useState<string | null>(null);
-  const [gravatarFailed, setGravatarFailed] = useState(false);
 
   useEffect(() => {
     if (!gravatarEmail || imageUrl) return;
     let cancelled = false;
-    setGravatarUrl(null);
-    setGravatarFailed(false);
     getGravatarUrl(gravatarEmail).then(url => {
       if (!cancelled) setGravatarUrl(url);
     });
@@ -44,9 +41,7 @@ export default function Avatar({
 
   const resolvedUrl = imageUrl && !imgFailed
     ? imageUrl
-    : gravatarUrl && !gravatarFailed
-      ? gravatarUrl
-      : null;
+    : gravatarUrl;
 
   return (
     <div
@@ -61,7 +56,7 @@ export default function Avatar({
           className="w-full h-full object-cover"
           onError={() => {
             if (resolvedUrl === imageUrl) setImgFailed(true);
-            else setGravatarFailed(true);
+            else setGravatarUrl(null);
           }}
         />
       ) : (
