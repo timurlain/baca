@@ -33,6 +33,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   const { user } = useAuth();
   const [task, setTask] = useState<TaskDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -49,21 +50,22 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
-      const [detail, usersData, categoriesData, tagsData, imagesData] = await Promise.all([
+      const [detail, categoriesData, tagsData] = await Promise.all([
         tasksApi.get(taskId),
-        usersApi.list(),
         categoriesApi.list(),
         tagsApi.list(),
-        imagesApi.list(taskId),
       ]);
       setTask(detail);
-      setAllUsers(usersData);
       setAllCategories(categoriesData);
       setAllTags(tagsData);
-      setTaskImages(imagesData);
-    } catch (err) {
+      // Non-critical data — load separately, don't break the modal
+      usersApi.list().then(setAllUsers).catch(() => setAllUsers([]));
+      imagesApi.list(taskId).then(setTaskImages).catch(() => setTaskImages([]));
+    } catch (err: any) {
       console.error('Failed to fetch task detail:', err);
+      setFetchError(err?.message || `Chyba při načítání (${err?.status || 'síť'})`);
     } finally {
       setLoading(false);
     }
@@ -191,6 +193,14 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
             <div className="flex flex-col items-center justify-center py-20 space-y-4">
               <div className="w-10 h-10 border-4 border-forest-600 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-gray-500">Načítání detailu...</span>
+            </div>
+          ) : fetchError ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-xl text-center">
+              <p className="font-bold mb-2">Chyba</p>
+              <p className="text-sm">{fetchError}</p>
+              <button onClick={fetchData} className="mt-4 text-xs font-bold uppercase tracking-widest text-red-800 hover:underline">
+                Zkusit znovu
+              </button>
             </div>
           ) : task && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
