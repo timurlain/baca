@@ -89,7 +89,7 @@ builder.Services.AddAuthentication(options =>
     options.ClientSecret = builder.Configuration["Oidc:ClientSecret"];
     options.ResponseType = "code";
     options.UsePkce = true;
-    options.SaveTokens = true;
+    options.SaveTokens = false; // Don't store tokens in cookie — reduces cookie size significantly
     options.CallbackPath = "/api/auth/callback";
 
     options.Scope.Clear();
