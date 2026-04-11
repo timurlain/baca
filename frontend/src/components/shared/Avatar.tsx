@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { getInitials } from '@/utils/helpers';
+import { useState, useEffect } from 'react';
+import { getInitials, getGravatarUrl } from '@/utils/helpers';
 
 interface AvatarProps {
   name?: string | null;
   shortcut?: string | null;
   imageUrl?: string | null;
+  gravatarEmail?: string | null;
   color?: string | null;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
@@ -21,26 +22,47 @@ export default function Avatar({
   name,
   shortcut,
   imageUrl,
+  gravatarEmail,
   color = '#3B82F6',
   size = 'md',
   className = ''
 }: AvatarProps) {
   const [imgFailed, setImgFailed] = useState(false);
+  const [gravatarUrl, setGravatarUrl] = useState<string | null>(null);
+  const [gravatarFailed, setGravatarFailed] = useState(false);
 
-  const showImage = imageUrl && !imgFailed;
+  useEffect(() => {
+    if (!gravatarEmail || imageUrl) return;
+    let cancelled = false;
+    setGravatarUrl(null);
+    setGravatarFailed(false);
+    getGravatarUrl(gravatarEmail).then(url => {
+      if (!cancelled) setGravatarUrl(url);
+    });
+    return () => { cancelled = true; };
+  }, [gravatarEmail, imageUrl]);
+
+  const resolvedUrl = imageUrl && !imgFailed
+    ? imageUrl
+    : gravatarUrl && !gravatarFailed
+      ? gravatarUrl
+      : null;
 
   return (
     <div
       className={`rounded-full flex items-center justify-center font-bold text-white shrink-0 overflow-hidden ${sizeClasses[size]} ${className}`}
-      style={{ backgroundColor: showImage ? 'transparent' : (color || '#3B82F6') }}
+      style={{ backgroundColor: resolvedUrl ? 'transparent' : (color || '#3B82F6') }}
       title={name || ''}
     >
-      {showImage ? (
+      {resolvedUrl ? (
         <img
-          src={imageUrl}
+          src={resolvedUrl}
           alt={name || ''}
           className="w-full h-full object-cover"
-          onError={() => setImgFailed(true)}
+          onError={() => {
+            if (resolvedUrl === imageUrl) setImgFailed(true);
+            else setGravatarFailed(true);
+          }}
         />
       ) : (
         shortcut || getInitials(name)
