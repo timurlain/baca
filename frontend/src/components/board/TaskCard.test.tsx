@@ -26,6 +26,7 @@ function makeTask(overrides: Partial<TaskItem> = {}): TaskItem {
     assigneeId: 1,
     assigneeName: 'Tomáš',
     assigneeAvatarColor: '#10B981',
+    assigneeEmail: null,
     assigneeShortcut: null,
     parentTaskId: null,
     dueDate: null,
