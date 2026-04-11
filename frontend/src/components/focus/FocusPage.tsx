@@ -62,7 +62,7 @@ export default function FocusPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto space-y-6 pb-20 sm:pb-0">
+    <div className="max-w-md mx-auto space-y-6 pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Můj fokus</h1>
         <Badge color="bg-forest-100 text-forest-800" className="px-3 py-1 text-sm font-bold">
