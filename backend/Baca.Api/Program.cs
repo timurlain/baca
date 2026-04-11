@@ -71,16 +71,6 @@ builder.Services.AddAuthentication(options =>
         context.Response.Redirect(context.RedirectUri);
         return Task.CompletedTask;
     };
-    options.Events.OnValidatePrincipal = context =>
-    {
-        // If the cookie can't be decrypted (e.g. after container restart with new keys),
-        // reject it so the user gets a fresh login instead of a cryptic error
-        if (context.Principal?.Identity?.IsAuthenticated != true)
-        {
-            context.RejectPrincipal();
-        }
-        return Task.CompletedTask;
-    };
 })
 .AddOpenIdConnect(options =>
 {
