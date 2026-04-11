@@ -1,10 +1,19 @@
 import { DEFAULT_APP_NAME } from '@/utils/constants';
+import { useAuthContext } from '@/context/AuthContext';
 
 export default function LoginPage() {
+  const { authError } = useAuthContext();
+
   const handleLogin = () => {
     const current = window.location.pathname;
     const returnUrl = current === '/login' ? '/' : current + window.location.search;
     window.location.href = `/api/auth/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+  };
+
+  const handleClearAndLogin = () => {
+    // Clear auth cookies and redirect to fresh login
+    document.cookie = '.AspNetCore.Cookies=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    handleLogin();
   };
 
   return (
@@ -19,6 +28,18 @@ export default function LoginPage() {
         </div>
 
         <div className="p-8 text-center">
+          {authError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 text-sm text-left">
+              <p className="font-bold mb-1">Problém s přihlášením</p>
+              <p>{authError}</p>
+              <button
+                onClick={handleClearAndLogin}
+                className="mt-3 text-xs font-bold uppercase tracking-widest text-red-800 hover:underline"
+              >
+                Zkusit znovu (vyčistit cookies)
+              </button>
+            </div>
+          )}
           <p className="text-gray-600 mb-6">Přihlaste se přes registrace.ovcina.cz</p>
           <button
             onClick={handleLogin}

@@ -57,16 +57,22 @@ function ResponsiveHome() {
 function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     auth.me()
       .then(setUser)
-      .catch(() => setUser(null))
+      .catch((err) => {
+        setUser(null);
+        if (err?.status === 403) {
+          setAuthError(err.message || 'Přístup odepřen. Zkuste se odhlásit a přihlásit znovu.');
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, authError }}>
       {children}
     </AuthContext.Provider>
   );

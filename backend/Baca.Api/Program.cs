@@ -132,55 +132,71 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnTokenValidated = async context =>
     {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("OidcAuth");
         var db = context.HttpContext.RequestServices.GetRequiredService<BacaDbContext>();
         var sub = context.Principal?.FindFirstValue("sub");
         var name = context.Principal?.FindFirstValue("name") ?? "Unknown";
         var email = context.Principal?.FindFirstValue("email") ?? "";
 
-        if (sub is null) return;
-
-        var user = await db.Users.FirstOrDefaultAsync(u => u.RegistraceUserId == sub);
-        if (user is not null && (user.IsDeleted || !user.IsActive))
+        if (sub is null)
         {
-            context.Fail("User account is deactivated");
+            logger.LogWarning("OnTokenValidated: sub claim is null, skipping local user sync");
             return;
         }
 
-        if (user is null)
+        User? user;
+        try
         {
-            // Only try email migration if we have a real email
-            if (!string.IsNullOrWhiteSpace(email))
+            user = await db.Users.FirstOrDefaultAsync(u => u.RegistraceUserId == sub);
+            if (user is not null && (user.IsDeleted || !user.IsActive))
             {
-                user = await db.Users.FirstOrDefaultAsync(u => u.Email == email && u.RegistraceUserId == null);
+                logger.LogWarning("OnTokenValidated: user {Sub} is deactivated (IsDeleted={IsDeleted}, IsActive={IsActive})", sub, user.IsDeleted, user.IsActive);
+                context.Fail("User account is deactivated");
+                return;
             }
 
-            if (user is not null)
+            if (user is null)
             {
-                user.RegistraceUserId = sub;
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    user = await db.Users.FirstOrDefaultAsync(u => u.Email == email && u.RegistraceUserId == null);
+                }
+
+                if (user is not null)
+                {
+                    user.RegistraceUserId = sub;
+                    logger.LogInformation("OnTokenValidated: linked existing user {Email} to OIDC sub {Sub}", email, sub);
+                }
+                else
+                {
+                    var roles = context.Principal?.FindAll("role").Select(c => c.Value).ToList() ?? [];
+                    user = new User
+                    {
+                        Name = name,
+                        Email = email,
+                        RegistraceUserId = sub,
+                        Role = roles.Contains("Admin") ? UserRole.Admin
+                            : roles.Contains("Guest") ? UserRole.Guest
+                            : UserRole.User,
+                        AvatarColor = "#3B82F6",
+                        IsActive = true,
+                    };
+                    db.Users.Add(user);
+                    logger.LogInformation("OnTokenValidated: created new local user for {Sub} ({Name}, {Email})", sub, name, email);
+                }
             }
             else
             {
-                var roles = context.Principal?.FindAll("role").Select(c => c.Value).ToList() ?? [];
-                user = new User
-                {
-                    Name = name,
-                    Email = email,
-                    RegistraceUserId = sub,
-                    Role = roles.Contains("Admin") ? UserRole.Admin
-                        : roles.Contains("Guest") ? UserRole.Guest
-                        : UserRole.User,
-                    AvatarColor = "#3B82F6",
-                    IsActive = true,
-                };
-                db.Users.Add(user);
+                user.Name = name;
             }
-        }
-        else
-        {
-            user.Name = name;
-        }
 
-        await db.SaveChangesAsync();
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "OnTokenValidated: failed to sync local user for sub={Sub}, email={Email}", sub, email);
+            return; // User will be authenticated but without local_user_id — /me will show diagnostic
+        }
 
         // Add the local user ID as a claim so endpoints can use it
         var identity = context.Principal?.Identity as ClaimsIdentity;
