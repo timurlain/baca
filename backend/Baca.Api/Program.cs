@@ -132,6 +132,7 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnTokenValidated = async context =>
     {
+#pragma warning disable CA1848, CA1873 // Perf analyzers — this runs once per login, not a hot path
         var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("OidcAuth");
         var db = context.HttpContext.RequestServices.GetRequiredService<BacaDbContext>();
         var sub = context.Principal?.FindFirstValue("sub");
@@ -203,6 +204,7 @@ builder.Services.AddAuthentication(options =>
         identity?.AddClaim(new Claim("local_user_id", user.Id.ToString(CultureInfo.InvariantCulture)));
         identity?.AddClaim(new Claim("local_user_role", user.Role.ToString()));
         identity?.AddClaim(new Claim("local_avatar_color", user.AvatarColor));
+#pragma warning restore CA1848, CA1873
     };
 });
 
