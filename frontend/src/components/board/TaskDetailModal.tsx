@@ -181,11 +181,25 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
               {task?.title || 'Načítání...'}
             </h2>
           </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/tasks/${taskId}`;
+                navigator.clipboard.writeText(url).then(() => {
+                  const btn = document.getElementById('copy-link-btn');
+                  if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '🔗'; }, 1500); }
+                });
+              }}
+              id="copy-link-btn"
+              className="text-gray-400 hover:text-forest-600 p-2 text-sm"
+              title="Zkopírovat odkaz"
+            >🔗</button>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          </div>
         </div>
 
         {/* Content */}
