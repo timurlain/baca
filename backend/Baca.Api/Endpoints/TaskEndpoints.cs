@@ -209,9 +209,7 @@ public static class TaskEndpoints
             .Include(t => t.Tags)
             .FirstAsync(t => t.Id == task.Id, ct);
 
-        var baseUrl = context.RequestServices.GetRequiredService<IConfiguration>()["App:BaseUrl"] ?? "";
-        var dto = ToDto(created);
-        return Results.Created($"/api/tasks/{task.Id}", new { dto.Id, dto.Title, Url = $"{baseUrl.TrimEnd('/')}/tasks/{task.Id}", Task = dto });
+        return Results.Created($"/api/tasks/{task.Id}", ToDto(created));
     }
 
     private static async Task<IResult> UpdateAsync(
