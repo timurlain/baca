@@ -185,7 +185,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
             <button
               onClick={() => {
                 const url = `${window.location.origin}/tasks/${taskId}`;
-                navigator.clipboard.writeText(url).then(() => {
+                navigator.clipboard?.writeText(url).then(() => {
                   const btn = document.getElementById('copy-link-btn');
                   if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '🔗'; }, 1500); }
                 });
