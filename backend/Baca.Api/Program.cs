@@ -335,12 +335,19 @@ static async Task SeedDataAsync(WebApplication app)
     if (!await db.Categories.AnyAsync())
     {
         db.Categories.AddRange(
+            new Category { Name = "Nerozhodnuto", Color = "#9CA3AF", SortOrder = 0 },
             new Category { Name = "Hra", Color = "#3B82F6", SortOrder = 1 },
             new Category { Name = "Logistika", Color = "#F59E0B", SortOrder = 2 },
             new Category { Name = "Jídlo", Color = "#EF4444", SortOrder = 3 },
             new Category { Name = "Rekvizity", Color = "#8B5CF6", SortOrder = 4 },
             new Category { Name = "Komunikace", Color = "#06B6D4", SortOrder = 5 }
         );
+        await db.SaveChangesAsync();
+    }
+    // Ensure "Nerozhodnuto" exists (for existing databases)
+    if (!await db.Categories.AnyAsync(c => c.Name == "Nerozhodnuto"))
+    {
+        db.Categories.Add(new Category { Name = "Nerozhodnuto", Color = "#9CA3AF", SortOrder = 0 });
         await db.SaveChangesAsync();
     }
 
