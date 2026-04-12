@@ -72,6 +72,7 @@ public class CreateTaskRequest
     public int? ParentTaskId { get; set; }
     public DateTime? DueDate { get; set; }
     public List<int>? TagIds { get; set; }
+    public string? Source { get; set; }
 }
 
 public class UpdateTaskRequest

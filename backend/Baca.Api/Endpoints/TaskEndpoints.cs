@@ -186,7 +186,8 @@ public static class TaskEndpoints
             SortOrder = maxSort + 1,
             CreatedById = userId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Source = request.Source,
         };
 
         if (request.TagIds is { Count: > 0 })
@@ -208,7 +209,9 @@ public static class TaskEndpoints
             .Include(t => t.Tags)
             .FirstAsync(t => t.Id == task.Id, ct);
 
-        return Results.Created($"/api/tasks/{task.Id}", ToDto(created));
+        var baseUrl = context.RequestServices.GetRequiredService<IConfiguration>()["App:BaseUrl"] ?? "";
+        var dto = ToDto(created);
+        return Results.Created($"/api/tasks/{task.Id}", new { dto.Id, dto.Title, Url = $"{baseUrl.TrimEnd('/')}/tasks/{task.Id}", Task = dto });
     }
 
     private static async Task<IResult> UpdateAsync(
