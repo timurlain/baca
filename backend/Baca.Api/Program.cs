@@ -218,6 +218,7 @@ forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseCors();
 app.UseAuthentication();
+app.UseMiddleware<Baca.Api.Middleware.ApiKeyMiddleware>();
 app.UseMiddleware<TokenRefreshMiddleware>();
 app.UseAuthorization();
 
