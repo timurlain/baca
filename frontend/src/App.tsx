@@ -34,6 +34,7 @@ import TrashManagement from '@/components/admin/TrashManagement';
 // Task creation & list
 import CreateTaskPage from '@/components/tasks/CreateTaskPage';
 import TaskListPage from '@/components/tasks/TaskListPage';
+import TaskDetailPage from '@/components/tasks/TaskDetailPage';
 
 // Guide (Phase 2b)
 import GuidePage from '@/components/guide/GuidePage';
@@ -121,6 +122,7 @@ function AuthenticatedApp() {
         {/* Tasks */}
         <Route path="/tasks" element={<AuthGuard><TaskListPage /></AuthGuard>} />
         <Route path="/tasks/new" element={<AuthGuard><CreateTaskPage /></AuthGuard>} />
+        <Route path="/tasks/:id" element={<AuthGuard><TaskDetailPage /></AuthGuard>} />
 
         {/* Voice (Agent D) */}
         <Route path="/voice" element={<AuthGuard><VoicePage /></AuthGuard>} />
