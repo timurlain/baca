@@ -127,9 +127,9 @@ describe('TaskDetailModal', () => {
     const onClose = vi.fn();
     renderModal({ onClose });
     await screen.findByText('Test úkol detail');
-    // Header close button (the X)
+    // Header close button (the X) — second button after the copy-link button
     const closeButtons = screen.getAllByRole('button');
-    const headerCloseBtn = closeButtons[0]; // First button is the X close
+    const headerCloseBtn = closeButtons[1];
     fireEvent.click(headerCloseBtn);
     expect(onClose).toHaveBeenCalledOnce();
   });
