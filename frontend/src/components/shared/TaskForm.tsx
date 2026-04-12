@@ -69,8 +69,15 @@ export default function TaskForm({
 
   useEffect(() => {
     usersApi.list().then(setUserList).catch(() => {});
-    categoriesApi.list().then(setCategoryList).catch(() => {});
-  }, []);
+    categoriesApi.list().then(cats => {
+      setCategoryList(cats);
+      // Auto-select "Nerozhodnuto" if no category is set
+      if (categoryId === null) {
+        const defaultCat = cats.find(c => c.name === 'Nerozhodnuto');
+        if (defaultCat) setCategoryId(defaultCat.id);
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
