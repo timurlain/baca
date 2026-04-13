@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import KanbanColumn from './KanbanColumn';
 import TaskCard from './TaskCard';
 import TaskDetailModal from './TaskDetailModal';
+import VoiceFab from '../voice/VoiceFab';
 
 const COLUMNS: TaskStatus[] = ['Idea', 'Open', 'InProgress', 'ForReview', 'Done'];
 
@@ -89,15 +90,18 @@ export default function KanbanBoard({ forceAssigneeId }: KanbanBoardProps) {
       <div className="mb-3 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
         <h1 className="text-2xl font-bold text-gray-900">{"\u00dakol\u006fv\u00e1 tabule"}</h1>
         {!isGuest && (
-          <button
-            onClick={() => navigate('/tasks/new')}
-            className="inline-flex items-center gap-2 bg-forest-800 text-white hover:bg-forest-700 px-4 py-2 rounded-lg text-sm font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-            </svg>
-            Nový úkol
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/tasks/new')}
+              className="inline-flex items-center gap-2 bg-forest-800 text-white hover:bg-forest-700 px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+              </svg>
+              Nový úkol
+            </button>
+            <VoiceFab />
+          </div>
         )}
       </div>
 
