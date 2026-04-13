@@ -151,11 +151,97 @@ function EditUserForm({ user, onSave, onCancel, isSelf }: EditUserFormProps) {
   );
 }
 
+interface BulkAddFormProps {
+  onSubmit: (entries: { name: string; email: string }[]) => void;
+  onCancel: () => void;
+}
+
+function BulkAddForm({ onSubmit, onCancel }: BulkAddFormProps) {
+  const [text, setText] = useState('');
+
+  const parseEntries = (): { name: string; email: string }[] => {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const entries: { name: string; email: string }[] = [];
+    for (const line of lines) {
+      // Match "Name <email@x.cz>" or "Name email@x.cz" or "email@x.cz"
+      const angleMatch = line.match(/^(.+?)\s*<([^>]+)>\s*$/);
+      if (angleMatch) {
+        entries.push({ name: angleMatch[1].trim(), email: angleMatch[2].trim() });
+        continue;
+      }
+      const emailOnly = line.match(/^([^\s,;]+@[^\s,;]+)$/);
+      if (emailOnly) {
+        const email = emailOnly[1];
+        const namePart = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        entries.push({ name: namePart, email });
+        continue;
+      }
+      const tabSplit = line.split(/[\t,;]/).map(s => s.trim()).filter(s => s.length > 0);
+      if (tabSplit.length >= 2 && tabSplit[1].includes('@')) {
+        entries.push({ name: tabSplit[0], email: tabSplit[1] });
+        continue;
+      }
+      if (tabSplit.length >= 1 && tabSplit[0].includes('@')) {
+        const email = tabSplit[0];
+        const namePart = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        entries.push({ name: namePart, email });
+      }
+    }
+    return entries;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const entries = parseEntries();
+    if (entries.length === 0) return;
+    onSubmit(entries);
+  };
+
+  const preview = parseEntries();
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+      <h3 className="font-medium text-gray-900">Hromadné přidání z registrace</h3>
+      <p className="text-xs text-gray-500">
+        Zkopíruj seznam z <a href="https://registrace.ovcina.cz/admin/uzivatele" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">registrace.ovcina.cz/admin/uzivatele</a>.
+        Akceptované formáty (jeden na řádek):
+      </p>
+      <ul className="text-xs text-gray-500 list-disc pl-5 space-y-0.5">
+        <li><code>Jan Novák &lt;jan@example.cz&gt;</code></li>
+        <li><code>Jan Novák, jan@example.cz</code></li>
+        <li><code>Jan Novák	jan@example.cz</code> (tab)</li>
+        <li><code>jan@example.cz</code> (jméno se odvodí)</li>
+      </ul>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={10}
+        placeholder="Jan Novák &lt;jan@example.cz&gt;&#10;Marie Svobodová &lt;marie@example.cz&gt;&#10;..."
+        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      {preview.length > 0 && (
+        <div className="text-xs text-gray-600">
+          Načteno <strong>{preview.length}</strong> uživatelů. Po přidání se automaticky propojí s OIDC při prvním přihlášení.
+        </div>
+      )}
+      <div className="flex gap-2">
+        <button type="submit" disabled={preview.length === 0} className="flex-1 bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          Přidat {preview.length > 0 ? `(${preview.length})` : ''}
+        </button>
+        <button type="button" onClick={onCancel} className="flex-1 border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+          Zrušit
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function UserManagement() {
   const [userList, setUserList] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<AuthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
   const [gravatarUrls, setGravatarUrls] = useState<Record<number, string>>({});
@@ -193,6 +279,37 @@ export default function UserManagement() {
     }
   };
 
+  const handleBulkAdd = async (entries: { name: string; email: string }[]) => {
+    let added = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+    for (const entry of entries) {
+      try {
+        const newUser = await users.create({
+          name: entry.name,
+          email: entry.email,
+          phone: null,
+          role: UserRole.User,
+        });
+        setUserList((prev) => [...prev, newUser]);
+        added++;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'unknown';
+        if (msg.includes('duplicate') || msg.includes('Email already')) {
+          skipped++;
+        } else {
+          errors.push(`${entry.email}: ${msg}`);
+        }
+      }
+    }
+    setShowBulkForm(false);
+    if (errors.length > 0) {
+      setMessage({ text: `Přidáno ${added}, přeskočeno ${skipped}, chyby: ${errors.join('; ')}`, type: 'error' });
+    } else {
+      setMessage({ text: `Přidáno ${added} uživatelů, přeskočeno ${skipped} (již existovali)`, type: 'success' });
+    }
+  };
+
   const handleEditUser = async (id: number, data: UpdateUserRequest) => {
     try {
       const updated = await users.update(id, data);
@@ -227,19 +344,28 @@ export default function UserManagement() {
       <AdminNav />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Správa uživatelů</h1>
-        {!showForm && !editingUser && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700"
-          >
-            Přidat uživatele
-          </button>
+        {!showForm && !showBulkForm && !editingUser && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBulkForm(true)}
+              className="border border-blue-600 text-blue-600 rounded-md px-3 py-2 text-sm font-medium hover:bg-blue-50"
+            >
+              Hromadně z registrace
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-blue-600 text-white rounded-md px-4 py-2 text-sm font-medium hover:bg-blue-700"
+            >
+              Přidat uživatele
+            </button>
+          </div>
         )}
       </div>
 
       <StatusMessage message={message} />
 
       {showForm && <AddUserForm onSubmit={handleAddUser} onCancel={() => setShowForm(false)} />}
+      {showBulkForm && <BulkAddForm onSubmit={handleBulkAdd} onCancel={() => setShowBulkForm(false)} />}
       {editingUser && (
         <EditUserForm
           user={editingUser}
