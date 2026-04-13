@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { useState, useEffect, type ReactNode } from 'react';
 import { auth } from '@/api/client';
 import type { AuthResponse } from '@/types';
-import { UserRole } from '@/types';
 import { AuthContext, useAuthContext } from '@/context/AuthContext';
 
 // Layout (Agent C)
@@ -21,7 +20,6 @@ import Dashboard from '@/components/dashboard/Dashboard';
 
 // Voice (Agent D)
 import VoicePage from '@/components/voice/VoicePage';
-import VoiceFab from '@/components/voice/VoiceFab';
 
 // Admin (Agent D)
 import UserManagement from '@/components/admin/UserManagement';
@@ -49,10 +47,8 @@ import GuideOffline from '@/components/guide/GuideOffline';
 import OfflineIndicator from '@/offline/offlineIndicator';
 
 function ResponsiveHome() {
-  const isMobile = window.innerWidth < 768;
-  return isMobile
-    ? <FocusPage />
-    : <Dashboard />;
+  // Always show focus page as home — users land on what matters most
+  return <FocusPage />;
 }
 
 function AuthProvider({ children }: { children: ReactNode }) {
@@ -102,8 +98,6 @@ function AuthGuard({ children }: { children: ReactNode }) {
 }
 
 function AuthenticatedApp() {
-  const { user } = useAuthContext();
-
   return (
     <>
       <OfflineIndicator />
@@ -147,7 +141,6 @@ function AuthenticatedApp() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {user?.role !== UserRole.Guest && <VoiceFab />}
     </>
   );
 }
