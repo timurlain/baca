@@ -4,7 +4,6 @@ import type { TaskStatus } from '@/types';
 import { formatDate, isOverdue, cn } from '@/utils/helpers';
 import Badge from '../shared/Badge';
 import TaskDetailModal from '../board/TaskDetailModal';
-import VoiceFab from '../voice/VoiceFab';
 import { Link } from 'react-router-dom';
 
 export default function FocusPage() {
@@ -68,21 +67,18 @@ export default function FocusPage() {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-gray-900">Můj fokus</h1>
           <Badge color="bg-forest-100 text-forest-800" className="px-3 py-1 text-sm font-bold">
-            {tasks.length}
+            {tasks.length} {tasks.length === 1 ? 'úkol' : tasks.length < 5 ? 'úkoly' : 'úkolů'}
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            to="/tasks/new"
-            className="inline-flex items-center gap-1 bg-forest-800 text-white hover:bg-forest-700 px-3 py-2 rounded-lg text-sm font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-            </svg>
-            <span className="hidden sm:inline">Nový</span>
-          </Link>
-          <VoiceFab />
-        </div>
+        <Link
+          to="/tasks/new"
+          className="inline-flex items-center gap-1 bg-forest-800 text-white hover:bg-forest-700 px-3 py-2 rounded-lg text-sm font-medium"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+          </svg>
+          <span className="hidden sm:inline">Nový</span>
+        </Link>
       </div>
 
       <div className="space-y-4">
