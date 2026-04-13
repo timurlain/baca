@@ -28,6 +28,7 @@ public static class TaskEndpoints
         TaskItemStatus? status,
         int? category,
         int? assignee,
+        string? assigneeEmail,
         string? search,
         int? parentId,
         int? tag,
@@ -55,6 +56,17 @@ public static class TaskEndpoints
 
         if (assignee is not null)
             query = query.Where(t => t.AssigneeId == assignee);
+
+        if (!string.IsNullOrWhiteSpace(assigneeEmail))
+        {
+            var normalizedEmail = assigneeEmail.Trim().ToLowerInvariant();
+            var assigneeUser = await db.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email != null && EF.Functions.ILike(u.Email, normalizedEmail), ct);
+            if (assigneeUser is null)
+                return Results.Ok(new List<TaskDto>());
+            query = query.Where(t => t.AssigneeId == assigneeUser.Id);
+        }
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(t =>
