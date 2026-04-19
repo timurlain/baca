@@ -195,7 +195,7 @@ export default function BulkImportTable({
                     }
                   >
                     <option value="">—</option>
-                    {userList.map((u) => (
+                    {userList.filter((u) => u.isActive || u.id === row.assigneeId).map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name}
                       </option>

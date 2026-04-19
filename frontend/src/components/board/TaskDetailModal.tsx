@@ -143,12 +143,14 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     setUploadingImage(true);
     try {
-      const uploaded = await imagesApi.upload(taskId, file);
-      setTaskImages(prev => [...prev, uploaded]);
+      for (const file of files) {
+        const uploaded = await imagesApi.upload(taskId, file);
+        setTaskImages(prev => [...prev, uploaded]);
+      }
       onUpdate();
     } catch (err) {
       console.error('Failed to upload image:', err);
@@ -258,6 +260,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                         <input
                           type="file"
                           accept=".jpg,.jpeg,.png,.webp"
+                          multiple
                           className="hidden"
                           onChange={handleImageUpload}
                           disabled={uploadingImage}
@@ -500,7 +503,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
                       onChange={(e) => handleUpdate({ assigneeId: e.target.value ? Number(e.target.value) : null })}
                     >
                       <option value="">Nepřiřazeno</option>
-                      {allUsers.map(u => (
+                      {allUsers.filter(u => u.isActive || u.id === task.assigneeId).map(u => (
                         <option key={u.id} value={u.id}>{u.name}</option>
                       ))}
                     </select>
