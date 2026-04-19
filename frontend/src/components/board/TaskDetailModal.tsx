@@ -146,15 +146,20 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
     setUploadingImage(true);
+    const uploaded: TaskImage[] = [];
     try {
       for (const file of files) {
-        const uploaded = await imagesApi.upload(taskId, file);
-        setTaskImages(prev => [...prev, uploaded]);
+        try {
+          uploaded.push(await imagesApi.upload(taskId, file));
+        } catch (err) {
+          console.error('Failed to upload image:', err);
+        }
       }
-      onUpdate();
-    } catch (err) {
-      console.error('Failed to upload image:', err);
     } finally {
+      if (uploaded.length > 0) {
+        setTaskImages(prev => [...prev, ...uploaded]);
+        onUpdate();
+      }
       setUploadingImage(false);
       e.target.value = '';
     }
