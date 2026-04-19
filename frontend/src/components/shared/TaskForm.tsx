@@ -134,7 +134,7 @@ export default function TaskForm({
           className={`w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-600 ${confidenceClass(confidence?.assignee)}`}
         >
           <option value="">— Nepřiřazeno —</option>
-          {userList.map((u) => (
+          {userList.filter((u) => u.isActive || u.id === assigneeId).map((u) => (
             <option key={u.id} value={u.id}>{u.name}</option>
           ))}
         </select>
