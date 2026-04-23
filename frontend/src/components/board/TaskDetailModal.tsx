@@ -179,7 +179,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" role="dialog" aria-modal="true">
-      <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-2xl sm:rounded-xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-4xl sm:rounded-xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gray-50 px-6 py-4 border-b flex items-center justify-between sticky top-0">
           <div className="flex items-center space-x-2 overflow-hidden mr-4">
@@ -227,7 +227,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
           ) : task && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Main Info */}
-              <div className="md:col-span-2 space-y-6">
+              <div className="md:col-span-2 space-y-6 min-w-0">
                 <div>
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Popis</h3>
                   {isGuest ? (
@@ -450,7 +450,7 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onUpdate }: T
               </div>
 
               {/* Sidebar Info */}
-              <div className="space-y-6 bg-gray-50 p-4 rounded-xl border border-gray-100 h-fit">
+              <div className="space-y-6 bg-gray-50 p-4 rounded-xl border border-gray-100 h-fit min-w-0">
                 <div>
                   <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Stav</h4>
                   <select
